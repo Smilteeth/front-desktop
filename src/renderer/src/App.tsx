@@ -1,5 +1,11 @@
+import Login from '../src/features/auth/pages/login'
+
 function App(): React.JSX.Element {
-  return <></>
+  return (
+    <>
+      <Login />
+    </>
+  )
 }
 
 export default App
