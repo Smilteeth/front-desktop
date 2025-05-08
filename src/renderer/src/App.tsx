@@ -1,10 +1,12 @@
-import Login from '../src/features/auth/pages/login'
+import React from 'react'
+import { HashRouter as Router } from 'react-router-dom'
+import AuthRoutes from '@renderer/routes/authRoutes'
 
 function App(): React.JSX.Element {
   return (
-    <>
-      <Login />
-    </>
+    <Router>
+      <AuthRoutes />
+    </Router>
   )
 }
 
