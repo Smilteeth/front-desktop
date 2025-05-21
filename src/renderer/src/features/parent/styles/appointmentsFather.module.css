@@ -1,0 +1,199 @@
+ .appointmentsPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  background-color: var(--background-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.profileContainer {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.profileImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--background-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.profileAvatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  color: var(--neutral-darker);
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.contentContainer {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  margin-bottom: 80px;
+  overflow: hidden;
+}
+
+.leftColumn {
+  width: 250px;
+  max-width: 30vw;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: min(20px, 2vh);
+  flex-shrink: 0;
+}
+
+.rightColumn {
+  flex: 1;
+  overflow: hidden;
+}
+
+.appointmentsList {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.noAppointments {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+}
+
+.noAppointments p {
+  color: var(--neutral-normal);
+  font-size: var(--font-size-title1);
+  font-weight: 700;
+  padding: 20px;
+  background-color: var(--background-light);
+  border-radius: 10px;
+  margin-top: 40px;
+}
+
+.dentistsCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--primary-normal);
+  border-radius: 20px;
+  padding: min(20px, 2vw);
+  cursor: pointer;
+  width: 100%;
+  min-height: 140px;
+  max-height: clamp(140px, 28vh, 300px);
+  box-sizing: border-box;
+  justify-content: center;
+  gap: min(8px, 0.8vh);
+  transition: background-color 0.2s;
+}
+
+.dentistsCard:hover {
+  background-color: var(--primary-normal-hover);
+}
+
+.dentistIcon {
+  width: clamp(80px, 8vw, 120px);
+  height: clamp(80px, 8vw, 120px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dentistIconPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dentistsText {
+  font-weight: 700;
+  color: var(--background-light);
+  font-size: clamp(12px, 1.8vw, 16px);
+  text-align: center;
+  line-height: 1.2;
+  word-wrap: break-word;
+  max-width: 90%;
+} 
+  
+  /* barra nav */
+  .bottomNav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content:center;
+    background-color: var(--background-light);
+    padding: 15px 0;
+  }
+  
+  /*icons barra nav*/
+  .navLink {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+    color: var(--neutral-normal);
+    min-width: 60px;
+    margin: 0 20px;
+  }
+  
+  /*texto debajo de los icons*/
+  .navLink span {
+    font-size: 14px; 
+    font-weight: 300;
+    transition: color 0.3s, font-weight 0.3s;
+  
+  }
+  
+  .active span {
+    color: var(--primary-normal);
+    font-weight: 600;
+  }
+  
+  .active {
+    color: var(--primary-normal);
+  }
+  
+  .navIcon {
+    margin-bottom: 5px; 
+    width: 24px; 
+    height: 24px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  
+  .navImage {
+    width: 35px; 
+    height: 35px; 
+    object-fit: contain;
+  }

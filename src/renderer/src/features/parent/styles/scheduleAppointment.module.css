@@ -1,29 +1,48 @@
-.addChildForm {
+.modalContent {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  width: 100%;
-  padding: 0 5px;
-}
-
-.formField {
+  gap: 20px;
   width: 100%;
 }
 
-.formActions {
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.label {
+  font-family: var(--Quicksand);
+  font-size: var(--font-size-title1);
+  color: var(--neutral-darker);
+  font-weight: 500;
+}
+
+.dateTimeGroup {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.dateTimeGroup > div {
+  flex: 1;
+}
+
+.buttonGroup {
   display: flex;
   justify-content: space-between;
-  margin-top: 15px;
-  gap: 10px;
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .cancelButton {
+  flex: 1;
   padding: 12px 0;
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
   font-size: var(--font-size-title1);
-  width: 48%;
   height: 46px;
   font-family: var(--Quicksand);
   background-color: var(--background-light);
@@ -35,51 +54,44 @@
 .cancelButton:hover {
   background-color: var(--neutral-light);
 }
-.submitButton {
+
+.scheduleButton {
+  flex: 1;
   padding: 12px 0;
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
   font-size: var(--font-size-title1);
-  width: 48%;
   height: 46px;
   font-family: var(--Quicksand);
-}
-
-.submitButton {
   background-color: var(--primary-normal);
   border: none;
   color: var(--primary-light);
   transition: background-color 0.2s;
 }
 
-.submitButton:hover {
+.scheduleButton:hover {
   background-color: var(--primary-normal-hover);
 }
 
-.submitButton:active {
-  background-color: var(--primary-normal-active);
-}
-
 .errorMessage {
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(255, 0, 0, 0.1);
   color: var(--error-primary);
   font-size: var(--font-size-body);
-  font-weight: 600;
-  margin-top: 4px;
-  padding-left: 10px;
   font-family: var(--Quicksand);
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: 600;
 }
 
-/* Estilo para campos con error */
-.formField input:invalid,
-.formField select:invalid {
-  border-color: var(--error-primary);
-}
-
-/* Indicador visual de campo requerido */
-.formField label:after {
-  content: '';
-  color: var(--error-primary);
-  font-weight: 700;
-  margin-left: 2px;
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--neutral-normal);
+  font-family: var(--Quicksand);
+  font-size: var(--font-size-title1);
 }
