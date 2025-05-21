@@ -35,8 +35,7 @@ const DentistDetail: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const fetchDentistData = async () => {
+    const fetchDentistData = async (): Promise<void> => {
       try {
         setLoading(true)
 
