@@ -30,5 +30,10 @@
 .appointments {
   display: flex;
   flex-direction: column;
-  flex: 3;
+  flex: 7;
+}
+
+.calendarContainer {
+  width: 250px;
+  margin-top: 40px;
 }

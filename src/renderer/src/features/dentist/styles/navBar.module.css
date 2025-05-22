@@ -21,9 +21,10 @@
 
 .navBar > .container > span {
   font-size: var(--font-size-title1);
-  color: var(--primary-light-active);
+  color: var(--neutral-normal);
 }
 
 .container.active > span {
   color: var(--primary-normal);
+  font-weight: 700;
 }

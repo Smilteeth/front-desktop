@@ -43,49 +43,39 @@ const DentistDashboard: React.FC = () => {
   useEffect(() => {
     const data: AppointmentProps[] = [
       {
-        appointmentDateTime: '2025-05-15T10:00:00',
+        appointmentDateTime: '2025-05-21T10:00:00',
         name: 'Jhon Doe',
         reason: 'Sensibilidad en molares'
       },
       {
-        appointmentDateTime: '2025-05-15T11:00:00',
+        appointmentDateTime: '2025-05-21T11:00:00',
         name: 'Jane Smith',
         reason: 'Revisión de ortodoncia'
       },
       {
-        appointmentDateTime: '2025-05-15T12:00:00',
+        appointmentDateTime: '2025-05-21T12:00:00',
         name: 'Alice Johnson',
-        reason: 'Limpieza dental'
-      },
-      {
-        appointmentDateTime: '2025-05-15T13:00:00',
-        name: 'Bob Brown',
-        reason: 'Extracción de muela'
-      },
-      {
-        appointmentDateTime: '2025-05-15T14:00:00',
-        name: 'Charlie Davis',
-        reason: 'Consulta de ortodoncia'
-      },
-      {
-        appointmentDateTime: '2025-05-15T15:00:00',
-        name: 'Diana Evans',
-        reason: 'Revisión dental'
-      },
-      {
-        appointmentDateTime: '2025-05-15T16:00:00',
-        name: 'Ethan Foster',
         reason: 'Dolor de muelas'
       },
       {
-        appointmentDateTime: '2025-05-15T17:00:00',
-        name: 'Fiona Green',
+        appointmentDateTime: '2025-05-21T13:00:00',
+        name: 'Bob Brown',
         reason: 'Consulta de ortodoncia'
       },
       {
-        appointmentDateTime: '2025-05-15T18:00:00',
-        name: 'George Harris',
+        appointmentDateTime: '2025-05-21T14:00:00',
+        name: 'Charlie Davis',
         reason: 'Limpieza dental'
+      },
+      {
+        appointmentDateTime: '2025-05-21T15:00:00',
+        name: 'Diana Evans',
+        reason: 'Extracción de muela'
+      },
+      {
+        appointmentDateTime: '2025-05-21T16:00:00',
+        name: 'Ethan Wilson',
+        reason: 'Revisión dental'
       }
     ]
 
