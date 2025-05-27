@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import Login from '@renderer/features/auth/pages/login'
 import Singup from '@renderer/features/auth/pages/signUp'
 import FormDentis from '@renderer/features/dentist/pages/formDentis'
