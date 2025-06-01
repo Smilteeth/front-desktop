@@ -37,7 +37,7 @@ const Login = (): React.JSX.Element => {
       if (userType === 'DENTIST') {
         navigate('/dentistDashboard')
       } else if (userType === 'FATHER') {
-        navigate('/fatherDashboard')
+        navigate('/profile-selection')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
