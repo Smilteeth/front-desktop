@@ -1,135 +1,95 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Calendar from '../../../components/calendar'
 import AppointmentCard from '../../../components/appointmentCard'
+import { getAppointmentsService, AppointmentResponse } from '../services/appointmentService'
+import { getChildrenService } from '../services/childService'
+import { getDentistsForSelectService } from '../services/dentistService'
 import styles from '../styles/appointmentsFather.module.css'
 import Dentist from '@renderer/assets/images/dentist.png'
-import Clock from '@renderer/assets/icons/clock.png'
-import ClockActive from '@renderer/assets/icons/clock-active.png'
-import Children from '@renderer/assets/icons/children.png'
-import ChildrenActive from '@renderer/assets/icons/children-active.png'
-import Home from '@renderer/assets/icons/home.png'
-import HomeActive from '@renderer/assets/icons/home-active.png'
+import Clock from '@renderer/assets/icons/clock.svg'
+import ClockActive from '@renderer/assets/icons/clock_active.svg'
+import Children from '@renderer/assets/icons/children.svg'
+import ChildrenActive from '@renderer/assets/icons/children_active.svg'
+import Home from '@renderer/assets/icons/home.svg'
+import HomeActive from '@renderer/assets/icons/home_active.svg'
 import ProfileAvatar from '@renderer/assets/images/profile-icon-9.png'
 
-interface AppointmentData {
-  appointmentId: number
+interface DentistData {
   userId: number
-  childId: number
-  reason: string
-  appointmentDatetime: string
-  child?: {
-    name: string
-    lastName: string
-  }
-  dentist?: {
-    user: {
-      name: string
-      lastName: string
-    }
-  }
+  name: string
 }
 
-// Mock data
-const mockAppointments: AppointmentData[] = [
-  {
-    appointmentId: 1,
-    userId: 1,
-    childId: 1,
-    reason: 'Sensibilidad en molares',
-    appointmentDatetime: '2025-05-06T10:00:00',
-    child: {
-      name: 'Jhon',
-      lastName: 'Doe'
-    },
-    dentist: {
-      user: {
-        name: 'Sinhue',
-        lastName: 'Montalvo Villagomez'
-      }
-    }
-  },
-  {
-    appointmentId: 2,
-    userId: 1,
-    childId: 2,
-    reason: 'Limpieza dental',
-    appointmentDatetime: '2025-05-07T14:30:00',
-    child: {
-      name: 'María',
-      lastName: 'García'
-    },
-    dentist: {
-      user: {
-        name: 'Sinhue',
-        lastName: 'Montalvo Villagomez'
-      }
-    }
-  },
-  {
-    appointmentId: 3,
-    userId: 2,
-    childId: 3,
-    reason: 'Revisión ortodóncia',
-    appointmentDatetime: '2025-05-06T16:00:00',
-    child: {
-      name: 'Pedro',
-      lastName: 'López'
-    },
-    dentist: {
-      user: {
-        name: 'Ana',
-        lastName: 'Martínez Ruiz'
-      }
-    }
-  },
-  {
-    appointmentId: 4,
-    userId: 1,
-    childId: 4,
-    reason: 'Blanqueamiento dental',
-    appointmentDatetime: '2025-05-08T11:00:00',
-    child: {
-      name: 'Ana',
-      lastName: 'Martínez'
-    },
-    dentist: {
-      user: {
-        name: 'Sinhue',
-        lastName: 'Montalvo Villagomez'
-      }
-    }
-  },
-  {
-    appointmentId: 5,
-    userId: 2,
-    childId: 1,
-    reason: 'Control de brackets',
-    appointmentDatetime: '2025-05-23T09:30:00',
-    child: {
-      name: 'Jhon',
-      lastName: 'Doe'
-    },
-    dentist: {
-      user: {
-        name: 'Ana',
-        lastName: 'Martínez Ruiz'
-      }
-    }
-  }
-]
+interface ChildData {
+  childId: number
+  name: string
+  lastName: string
+}
 
 const AppointmentsPage: FC = () => {
   const navigate = useNavigate()
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-
-  const [allAppointments, setAllAppointments] = useState<AppointmentData[]>(mockAppointments)
-
+  const [allAppointments, setAllAppointments] = useState<AppointmentResponse[]>([])
+  const [children, setChildren] = useState<ChildData[]>([])
+  const [dentists, setDentists] = useState<DentistData[]>([])
   const [activeTab, setActiveTab] = useState<string>('citas')
+  const [isLoading, setLoading] = useState(true)
+  const [, setError] = useState<string | null>(null)
 
-  // Función para filtrar las citas por fecha
-  const getAppointmentsForDate = (date: Date): AppointmentData[] => {
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  const fetchAllData = async (): Promise<void> => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const [appointmentsResult, childrenResult, dentistsResult] = await Promise.allSettled([
+        getAppointmentsService(1, 100),
+        getChildrenService(),
+        getDentistsForSelectService()
+      ])
+
+      if (appointmentsResult.status === 'fulfilled') {
+        setAllAppointments(appointmentsResult.value)
+      } else {
+        console.error('Error al cargar citas:', appointmentsResult.reason)
+        setAllAppointments([])
+      }
+
+      if (childrenResult.status === 'fulfilled') {
+        const childrenData = childrenResult.value.map((child) => ({
+          childId: child.childId,
+          name: child.name,
+          lastName: child.lastName
+        }))
+        setChildren(childrenData)
+      } else {
+        console.error('Error al cargar hijos:', childrenResult.reason)
+        setChildren([])
+      }
+
+      if (dentistsResult.status === 'fulfilled') {
+        setDentists(dentistsResult.value)
+      } else {
+        console.error('Error al cargar dentistas:', dentistsResult.reason)
+        setDentists([])
+      }
+    } catch (error) {
+      console.error('Error general al cargar datos:', error)
+      setError(error instanceof Error ? error.message : 'Error al cargar los datos')
+
+      setAllAppointments([])
+      setChildren([])
+      setDentists([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getAppointmentsForDate = (date: Date): AppointmentResponse[] => {
     return allAppointments.filter((appointment) => {
       const appointmentDate = new Date(appointment.appointmentDatetime)
       return (
@@ -140,10 +100,8 @@ const AppointmentsPage: FC = () => {
     })
   }
 
-  // Obtener las citas para la fecha seleccionada
   const appointments = getAppointmentsForDate(selectedDate)
 
-  // Función para formatear fecha para mostrar
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-ES', {
       day: 'numeric',
@@ -151,66 +109,66 @@ const AppointmentsPage: FC = () => {
     }).format(date)
   }
 
-  // Función para reagendar cita en proceso
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const handleReschedule = (appointmentId: string) => {
+  const handleReschedule = async (appointmentId: string): Promise<void> => {
     const appointment = allAppointments.find((a) => a.appointmentId.toString() === appointmentId)
 
-    if (appointment) {
-      const newDateTime = prompt('Ingrese nueva fecha y hora (YYYY-MM-DD HH:mm)')
-      const reason = prompt('Motivo del reagendamiento')
-
-      if (newDateTime && reason) {
-        const updatedAppointments = allAppointments.map((app) => {
-          if (app.appointmentId.toString() === appointmentId) {
-            return {
-              ...app,
-              appointmentDatetime: new Date(newDateTime).toISOString()
-            }
-          }
-          return app
-        })
-        setAllAppointments(updatedAppointments)
-
-        // Simulación de éxito
-        alert('Cita reagendada con éxito')
-      }
+    if (!appointment) {
+      alert('Cita no encontrada')
+      return
     }
-  }
 
-  // Función para cancelar cita en proceso
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const handleCancel = (appointmentId: string) => {
-    const reason = prompt('Motivo de la cancelación')
-
-    if (reason && confirm('¿Está seguro de cancelar esta cita?')) {
-      const updatedAppointments = allAppointments.filter(
-        (app) => app.appointmentId.toString() !== appointmentId
+    try {
+      const newDateTime = prompt(
+        'Ingrese nueva fecha y hora (YYYY-MM-DD HH:MM)',
+        appointment.appointmentDatetime.slice(0, 16).replace('T', ' ')
       )
-      setAllAppointments(updatedAppointments)
 
-      alert('Cita cancelada con éxito')
+      if (!newDateTime) return
+
+      const reason = prompt('Motivo del reagendamiento')
+      if (!reason) return
+
+      await fetchAllData()
+
+      alert('Cita reagendada exitosamente')
+    } catch (error) {
+      console.error('Error al reagendar la cita:', error)
+      alert(
+        `Error al reagendar la cita: ${error instanceof Error ? error.message : 'Error desconocido'}`
+      )
     }
   }
 
-  // Función para navegar a la página de dentistas
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const navigateToDentists = () => {
+  const handleCancel = async (): Promise<void> => {
+    try {
+      const reason = prompt('Motivo de la cancelación')
+      if (!reason) return
+
+      if (!confirm('¿Está seguro de cancelar esta cita?')) return
+      await fetchAllData()
+
+      alert('Cita cancelada exitosamente')
+    } catch (error) {
+      console.error('Error al cancelar la cita:', error)
+      alert(
+        `Error al cancelar la cita: ${error instanceof Error ? error.message : 'Error desconocido'}`
+      )
+    }
+  }
+
+  const navigateToDentists = (): void => {
     navigate('/dentistDirectory')
   }
 
-  // Función para manejar la navegación
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const handleNavClick = (tab: string) => {
+  const handleNavClick = (tab: string): void => {
     if (tab === 'inicio') {
-      navigate('/homeFather')
+      navigate('/fatherDashboard')
     } else if (tab === 'hijos') {
-      navigate('')
+      navigate('/children')
     }
     setActiveTab(tab)
   }
 
-  // Función para calcular minutos hasta la cita
   const calculateMinutesUntil = (appointmentDateTime: string): number => {
     const appointmentTime = new Date(appointmentDateTime)
     const now = new Date()
@@ -218,7 +176,6 @@ const AppointmentsPage: FC = () => {
     return Math.floor(diffMs / 60000)
   }
 
-  // Función para formatear hora
   const formatTime = (dateTimeString: string): string => {
     const date = new Date(dateTimeString)
     return date.toLocaleTimeString('es-ES', {
@@ -226,6 +183,24 @@ const AppointmentsPage: FC = () => {
       minute: '2-digit',
       hour12: false
     })
+  }
+
+  const getChildName = (childId: number | null): string => {
+    if (!childId) return 'Niño desconocido'
+
+    const child = children.find((c) => c.childId === childId)
+    return child ? `${child.name} ${child.lastName}` : `Niño ${childId}`
+  }
+
+  const getDentistName = (dentistId: number | null): string => {
+    if (!dentistId) return 'Dentista desconocido'
+
+    const dentist = dentists.find((d) => d.userId === dentistId)
+    return dentist ? dentist.name : `Dentista ${dentistId}`
+  }
+
+  if (isLoading) {
+    return <div className={styles.loading}>Cargando...</div>
   }
 
   return (
@@ -262,11 +237,11 @@ const AppointmentsPage: FC = () => {
                   <AppointmentCard
                     key={appointment.appointmentId}
                     id={appointment.appointmentId.toString()}
-                    patientName={`${appointment.child?.name || ''} ${appointment.child?.lastName || ''}`}
+                    patientName={getChildName(appointment.childId)}
                     time={formatTime(appointment.appointmentDatetime)}
                     minutesUntil={calculateMinutesUntil(appointment.appointmentDatetime)}
                     description={appointment.reason}
-                    doctorName={`Dr. ${appointment.dentist?.user.name || ''} ${appointment.dentist?.user.lastName || ''}`}
+                    doctorName={getDentistName(appointment.dentistId)}
                     onReschedule={handleReschedule}
                     onCancel={handleCancel}
                   />

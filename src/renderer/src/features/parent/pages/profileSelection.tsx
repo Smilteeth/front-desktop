@@ -1,58 +1,167 @@
-import { FC } from 'react'
+import { FC, useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getChildrenService, ChildResponse } from '../services/childService'
+import { getUserProfileService, UserProfileResponse } from '../services/userServices'
 import styles from '../styles/profileSelection.module.css'
 import ProfileAvatar from '@renderer/assets/images/profile-icon-9.png'
 
-interface FatherProfile {
-  userId: number
+interface Profile {
+  id: number
+  type: 'FATHER' | 'CHILD'
   name: string
-  type: 'FATHER'
+  data: UserProfileResponse | ChildResponse
 }
-
-interface ChildProfile {
-  childId: number
-  name: string
-  lastName: string
-}
-
-type Profile =
-  | { id: number; type: 'FATHER'; name: string; fullData: FatherProfile }
-  | { id: number; type: 'CHILD'; name: string; fullData: ChildProfile }
 
 const ProfileSelection: FC = () => {
   const navigate = useNavigate()
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [isLoading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const profiles: Profile[] = [
-    {
-      id: 1,
-      type: 'FATHER',
-      name: 'Mi perfil',
-      fullData: {
-        userId: 1,
-        name: 'Mi perfil',
-        type: 'FATHER'
+  const extractUserInfoFromToken = useCallback((): {
+    userId: number
+    email: string
+    type: string
+  } | null => {
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) return null
+
+    try {
+      const payload = JSON.parse(atob(authToken.split('.')[1]))
+      return {
+        userId: payload.userId || 1,
+        email: payload.email || 'usuario@email.com',
+        type: payload.type || 'FATHER'
       }
-    },
-    {
-      id: 2,
-      type: 'CHILD',
-      name: 'Si',
-      fullData: {
-        childId: 2,
-        name: 'Si',
-        lastName: 'No'
-      }
+    } catch (error) {
+      console.warn('No se pudo decodificar el token JWT:', error)
+      return null
     }
-  ]
+  }, [])
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const handleProfileSelect = (profile: Profile) => {
+  const fetchProfiles = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const profilesList: Profile[] = []
+
+      try {
+        const userProfile = await getUserProfileService()
+
+        profilesList.push({
+          id: userProfile.userId,
+          type: 'FATHER',
+          name: `${userProfile.name} ${userProfile.lastName}`,
+          data: userProfile
+        })
+      } catch (userError) {
+        console.error('Error al cargar perfil del usuario:', userError)
+
+        const tokenInfo = extractUserInfoFromToken()
+        if (tokenInfo) {
+          const basicProfile: UserProfileResponse = {
+            userId: tokenInfo.userId,
+            name: 'Usuario',
+            lastName: 'Padre',
+            email: tokenInfo.email,
+            type: tokenInfo.type as 'FATHER',
+            birthDate: '1990-01-01',
+            creationDate: new Date().toISOString(),
+            isActive: true
+          }
+
+          profilesList.push({
+            id: basicProfile.userId,
+            type: 'FATHER',
+            name: `${basicProfile.name} ${basicProfile.lastName}`,
+            data: basicProfile
+          })
+        } else {
+          setError('No se pudo cargar el perfil del usuario')
+        }
+      }
+
+      try {
+        const children = await getChildrenService()
+
+        children.forEach((child) => {
+          profilesList.push({
+            id: child.childId,
+            type: 'CHILD',
+            name: `${child.name} ${child.lastName}`,
+            data: child
+          })
+        })
+      } catch (childrenError) {
+        console.error('Error al cargar hijos :', childrenError)
+      }
+
+      setProfiles(profilesList)
+    } catch (error) {
+      console.error(' Error al cargar perfiles:', error)
+      setError(error instanceof Error ? error.message : 'Error desconocido al cargar los perfiles')
+    } finally {
+      setLoading(false)
+    }
+  }, [extractUserInfoFromToken])
+
+  useEffect(() => {
+    fetchProfiles()
+  }, [fetchProfiles])
+
+  const handleProfileSelect = (profile: Profile): void => {
     if (profile.type === 'FATHER') {
-      console.log(`Perfil seleccionado: ${profile.name} (Padre)`)
-      navigate('/homeFather')
+      localStorage.setItem(
+        'selectedProfile',
+        JSON.stringify({
+          type: 'FATHER',
+          id: profile.id,
+          name: profile.name,
+          data: profile.data
+        })
+      )
+
+      navigate('/fatherDashboard')
     } else {
-      console.log(`Perfil seleccionado: ${profile.name} (Niño)`)
+      localStorage.setItem(
+        'selectedProfile',
+        JSON.stringify({
+          type: 'CHILD',
+          id: profile.id,
+          name: profile.name,
+          data: profile.data
+        })
+      )
+
+      alert(`Perfil de ${profile.name} seleccionado. Por ahora solo se registra en consola.`)
     }
+  }
+
+  const getProfileName = (profile: Profile): string => {
+    if (profile.type === 'FATHER') {
+      return 'Mi perfil'
+    } else {
+      return `${profile.name}`
+    }
+  }
+
+  if (error && profiles.length === 0) {
+    return (
+      <div className={styles.profileSelectionPage}>
+        <div className={styles.errorContainer}>
+          <h1 className={styles.title}>Error al cargar perfiles</h1>
+          <p className={styles.errorMessage}>{error}</p>
+          <button className={styles.retryButton} onClick={fetchProfiles}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return <div className={styles.loading}>Cargando...</div>
   }
 
   return (
@@ -62,7 +171,7 @@ const ProfileSelection: FC = () => {
       <div className={styles.profilesContainer}>
         {profiles.map((profile) => (
           <div
-            key={profile.id}
+            key={`${profile.type}-${profile.id}`}
             className={styles.profileCard}
             onClick={() => handleProfileSelect(profile)}
           >
@@ -71,7 +180,9 @@ const ProfileSelection: FC = () => {
                 <img src={ProfileAvatar} alt="Profile" className={styles.profileAvatar} />
               </div>
             </div>
-            <p className={styles.profileName}>{profile.name}</p>
+            <div className={styles.profileInfo}>
+              <p className={styles.profileName}>{getProfileName(profile)}</p>
+            </div>
           </div>
         ))}
       </div>
