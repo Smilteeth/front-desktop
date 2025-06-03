@@ -15,6 +15,7 @@ import SettingsDentist from '@renderer/features/dentist/pages/settingsDentist'
 import ProfileDentist from '@renderer/features/dentist/pages/profile'
 import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
+import FormFather from '@renderer/features/parent/pages/formFather'
 
 function AuthRoutes(): React.JSX.Element {
   return (
@@ -73,6 +74,7 @@ function AuthRoutes(): React.JSX.Element {
       />
 
       {/* Routes for Father */}
+      <Route path="/formFather" element={<FormFather />} />
       <Route
         path="/profile-selection"
         element={
