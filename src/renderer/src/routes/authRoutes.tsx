@@ -15,6 +15,7 @@ import SettingsDentist from '@renderer/features/dentist/pages/settingsDentist'
 import ProfileDentist from '@renderer/features/dentist/pages/profile'
 import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 
 function AuthRoutes(): React.JSX.Element {
   return (
