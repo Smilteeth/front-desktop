@@ -1,4 +1,21 @@
+<<<<<<< HEAD
 import React, { useState } from 'react'
+=======
+import { useState, FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { signupService } from '../services/signupService'
+import { loginService } from '../services/loginService'
+import { SignupCredentials, LoginCredentials } from '../types/authTypes'
+import {
+  validateType,
+  validateName,
+  validateLastName,
+  validateBirthDate,
+  validateEmail,
+  validatePassword,
+  validateConfirmPassword
+} from '@renderer/utils/validators'
+>>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6
 import heroImageSignup from '@renderer/assets/images/heroImageSignup.png'
 import InputForm from '@renderer/components/inputForm'
 import InputList from '@renderer/components/inputList'
@@ -24,7 +41,27 @@ const SignUp = (): React.JSX.Element => {
       birthDate,
       email,
       password
+<<<<<<< HEAD
     })
+=======
+    }
+
+    try {
+      await signupService(credentials)
+
+      const result = await loginService(credentialsLogin)
+      if (result.userType === 'DENTIST') {
+        navigate('/formDentist')
+      } else if (result.userType === 'FATHER') {
+        navigate('/formFather')
+      }
+    } catch (error) {
+      console.error('Error al relizar el registro:', error)
+      setSignupError('Error al realizar el registro. Por favor, inténtalo de nuevo más tarde')
+    } finally {
+      setIsLoading(false)
+    }
+>>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6
   }
 
   return (
