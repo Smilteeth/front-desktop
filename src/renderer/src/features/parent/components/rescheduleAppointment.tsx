@@ -6,6 +6,7 @@ import { AppointmentResponse } from '../services/appointmentService'
 import { getDentistByIdService, DentistResponse } from '../services/dentistService'
 import styles from '../styles/rescheduleAppointment.module.css'
 
+
 interface RescheduleAppointmentModalProps {
   isOpen: boolean
   onClose: () => void
