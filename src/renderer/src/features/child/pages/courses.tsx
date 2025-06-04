@@ -4,9 +4,7 @@ import CoursesIconActive from '@renderer/components/coursesIconeActive'
 import TeethIcon from '@renderer/components/teethIcon'
 // import avatarImage from './assets/avatar.png'
 
-import { /**useLocation,**/ useNavigate } from 'react-router-dom';
-
-
+// import { /**useLocation,**/ useNavigate } from 'react-router-dom';
 interface Course {
   id: number
   title: string // Validación específica para title
@@ -18,7 +16,7 @@ interface CourseCardProps {
 }
 
 const Courses: FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const courses = {
     inProgress: [
       { id: 1, title: 'Cepillado correcto', thumbnail: './assets/course1.png' },
@@ -85,6 +83,7 @@ const Courses: FC = () => {
   return (
     <div className={styles['courses-container']}>
       {/* Header */}
+      <div>{/* Aqui el header con perfil, monedas y notificaciones*/}</div>
 
       <main className={styles['courses-main']}>
         {/* Sección de búsqueda corregida */}
@@ -121,7 +120,8 @@ const Courses: FC = () => {
           <CoursesIconActive />
           <span>Cursos</span>
         </button>
-        <button className={styles['nav-button']} onClick={() => navigate('/dientin')}>
+        <button className={styles['nav-button']}>
+          {/** }onClick={() => navigate('/dientin')*/}
           <TeethIcon />
           <span>Dientin</span>
         </button>

@@ -1,19 +1,8 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import Login from '@renderer/features/auth/pages/login'
 import Signup from '@renderer/features/auth/pages/signUp'
-
-/* FIXME: Solucion breve de conflictos */
-
-// <<<<<<< HEAD
-// import HomePage from '@renderer/features/parent/pages/home'
-// import ProfileSelection from '@renderer/features/parent/pages/profileSelection'
-// import Courses from '@renderer/features/child/pages/courses'
-// import CourseDetail from '@renderer/features/child/pages/courseDetail'
-// import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
-// import Dientin from '@renderer/features/child/pages/dientin'
-// =======
-
 import FormDentis from '@renderer/features/dentist/pages/formDentis'
 import DentistDashboard from '@renderer/features/dentist/pages/dentistDashboard'
 import ProfileSelection from '@renderer/features/parent/pages/profileSelection'
@@ -27,23 +16,17 @@ import SettingsDentist from '@renderer/features/dentist/pages/settingsDentist'
 import ProfileDentist from '@renderer/features/dentist/pages/profile'
 import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
-import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 
+// Child pages
+import Courses from '@renderer/features/child/pages/courses'
+import Dientin from '@renderer/features/child/pages/dientinHome'
+import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
+
+// import FormFather from '@renderer/features/parent/pages/formFather' FIXME: Me da error de importación, revisar
 
 function AuthRoutes(): React.JSX.Element {
   return (
     <Routes>
-
-{/* <<<<<<< HEAD
-      <Route path="/" element={<Courses />} />
-      <Route path="/singup" element={<Singup />} />
-      <Route path="/formDentist" element={<FormDentis />} />
-      <Route path="/coursePlayer" element={<CoursePlayer />} />
-      <Route path="/courseDetail" element={<CourseDetail />} />
-      <Route path="/dientin" element={<Dientin />} />
-======= */}
-
-
       <Route path="/" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
@@ -98,6 +81,7 @@ function AuthRoutes(): React.JSX.Element {
       />
 
       {/* Routes for Father */}
+      {/* <Route path="/formFather" element={<FormFather />} /> */}
       <Route
         path="/profile-selection"
         element={
@@ -154,7 +138,30 @@ function AuthRoutes(): React.JSX.Element {
           </ProtectedRoute>
         }
       />
-{/* >>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6 */}
+      <Route
+        path="/courses"
+        element={
+          <ProtectedRoute>
+            <Courses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dientin"
+        element={
+          <ProtectedRoute>
+            <Dientin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/watch" // - /:courseId
+        element={
+          <ProtectedRoute>
+            <CoursePlayer />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }
