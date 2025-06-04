@@ -21,6 +21,7 @@ import ChildDetail from '@renderer/features/parent/pages/childDetail'
 import Courses from '@renderer/features/child/pages/courses'
 import Dientin from '@renderer/features/child/pages/dientinHome'
 import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
+import CourseDetail from '@renderer/features/child/pages/courseDetail'
 
 // import FormFather from '@renderer/features/parent/pages/formFather' FIXME: Me da error de importación, revisar
 
@@ -155,10 +156,18 @@ function AuthRoutes(): React.JSX.Element {
         }
       />
       <Route
-        path="/watch" // - /:courseId
+        path="/coursePlay" // - /:courseId
         element={
           <ProtectedRoute>
             <CoursePlayer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courseDetail"
+        element={
+          <ProtectedRoute>
+            <CourseDetail />
           </ProtectedRoute>
         }
       />
