@@ -7,7 +7,7 @@ const TeethIcon: React.FC = () => {
   const navigate = useNavigate()
 
   const handleBack: () => void = () => {
-    navigate(-1)
+    navigate('/dientin')
   }
 
   return (
