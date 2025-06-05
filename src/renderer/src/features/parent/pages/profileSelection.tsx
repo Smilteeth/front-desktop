@@ -147,7 +147,7 @@ const ProfileSelection: FC = () => {
     return (
       <div className={styles.profileSelectionPage}>
         <div className={styles.errorContainer}>
-          <p className={styles.errorTitle}>Error al cargar perfiles</p>
+          <h1 className={styles.title}>Error al cargar perfiles</h1>
           <p className={styles.errorMessage}>{error}</p>
           <button className={styles.retryButton} onClick={fetchProfiles}>
             Reintentar
