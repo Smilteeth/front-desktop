@@ -116,7 +116,7 @@ const ProfileSelection: FC = () => {
 
       navigate('/fatherDashboard')
     } else {
-      // Guardar perfil del hijo seleccionado
+
       localStorage.setItem(
         'selectedProfile',
         JSON.stringify({
