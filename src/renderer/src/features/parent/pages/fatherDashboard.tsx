@@ -5,12 +5,11 @@ import WeeklyBrushingList from '../components/weeklyBrushingList'
 import ChildCard from '../components/childCard'
 import Modal from '../components/modal'
 import AddChildForm from '../components/addChildForm'
-import { getChildrenService, ChildResponse, ChildData } from '../services/childService'
+import { getChildrenService, ChildResponse } from '../services/childService'
 import {
   getTodayBrushRecordsService,
   getWeeklyBrushRecordsService,
   createBrushRecordService,
-  deleteBrushRecordService,
   BrushRecord
 } from '../services/brushService'
 import styles from '../styles/fatherDashboard.module.css'
@@ -56,6 +55,111 @@ const HomePage: FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+
+  const isTimeNear = (
+    recordTime: string,
+    scheduledTime: string,
+    toleranceMinutes: number = 120
+  ): boolean => {
+    const recordMinutes = timeToMinutes(recordTime)
+    const scheduledMinutes = timeToMinutes(scheduledTime)
+    return Math.abs(recordMinutes - scheduledMinutes) <= toleranceMinutes
+  }
+
+  const determineBrushType = (
+    recordDatetime: string,
+    child: ChildResponse
+  ): 'morning' | 'afternoon' | 'night' | null => {
+    const recordTime = new Date(recordDatetime).toTimeString().slice(0, 5)
+
+    if (isTimeNear(recordTime, child.morningBrushingTime, 120)) {
+      return 'morning'
+    }
+    if (isTimeNear(recordTime, child.afternoonBrushingTime, 120)) {
+      return 'afternoon'
+    }
+    if (isTimeNear(recordTime, child.nightBrushingTime, 120)) {
+      return 'night'
+    }
+
+    return null
+  }
+
+  const getBrushingStatusFromRecords = (
+    records: BrushRecord[],
+    child: ChildResponse
+  ): BrushingStatus => {
+    const today = new Date().toISOString().split('T')[0]
+
+    const todayRecords = records.filter((record) => {
+      const recordDate = new Date(record.brushDatetime).toISOString().split('T')[0]
+      return recordDate === today
+    })
+
+    const completedTypes = new Set<string>()
+
+    todayRecords.forEach((record) => {
+      const brushType = determineBrushType(record.brushDatetime, child)
+      if (brushType) {
+        completedTypes.add(brushType)
+      }
+    })
+
+    return {
+      morning: completedTypes.has('morning') ? 'completed' : 'pending',
+      afternoon: completedTypes.has('afternoon') ? 'completed' : 'pending',
+      night: completedTypes.has('night') ? 'completed' : 'pending'
+    }
+  }
+
+  const generateWeeklyBrushingFromRecords = (
+    records: BrushRecord[],
+    child: ChildResponse
+  ): DayBrushing[] => {
+    const days: DayBrushing[] = []
+    const today = new Date()
+
+    const firstDayOfWeek = new Date(today)
+    const dayOfWeek = today.getDay()
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
+    firstDayOfWeek.setDate(diff)
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(firstDayOfWeek)
+      date.setDate(firstDayOfWeek.getDate() + i)
+      const dayStr = date.toISOString().substring(0, 10)
+
+      const dayRecords = records.filter((record) => {
+        const recordDate = new Date(record.brushDatetime).toISOString().substring(0, 10)
+        return recordDate === dayStr
+      })
+
+      const completedTypes = new Set<string>()
+
+      dayRecords.forEach((record) => {
+        const brushType = determineBrushType(record.brushDatetime, child)
+        if (brushType) {
+          completedTypes.add(brushType)
+        }
+      })
+
+      days.push({
+        date,
+        status: {
+          morning: completedTypes.has('morning') ? 'completed' : 'pending',
+          afternoon: completedTypes.has('afternoon') ? 'completed' : 'pending',
+          night: completedTypes.has('night') ? 'completed' : 'pending'
+        }
+      })
+    }
+
+    return days
+  }
+
   useEffect(() => {
     const fetchInitialData = async (): Promise<void> => {
       try {
@@ -68,7 +172,6 @@ const HomePage: FC = () => {
         if (childrenData.length > 0) {
           setSelectedChild(childrenData[0])
 
-          // Cargar datos de cepillado para todos los hijos
           try {
             const brushingDataPromises = childrenData.map(async (child) => {
               const todayRecords = await getTodayBrushRecordsService(child.childId)
@@ -77,8 +180,8 @@ const HomePage: FC = () => {
               return {
                 childId: child.childId,
                 data: {
-                  todayBrushing: getBrushingStatusFromRecords(todayRecords),
-                  weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords),
+                  todayBrushing: getBrushingStatusFromRecords(todayRecords, child),
+                  weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords, child),
                   todayRecords: todayRecords
                 }
               }
@@ -107,7 +210,7 @@ const HomePage: FC = () => {
     fetchInitialData()
   }, [])
 
-  const handleAddChild = async (data: ChildData): Promise<void> => {
+  const handleChildCreated = async (): Promise<void> => {
     try {
       setIsCreatingChild(true)
       setAddChildError(null)
@@ -115,109 +218,32 @@ const HomePage: FC = () => {
       const updatedChildren = await getChildrenService()
       setChildren(updatedChildren)
 
-      const newChild = updatedChildren.find(
-        (child) => child.name === data.name && child.lastName === data.lastName
-      )
+      if (updatedChildren.length > 0) {
+        const lastChild = updatedChildren[updatedChildren.length - 1]
+        setSelectedChild(lastChild)
 
-      if (newChild) {
-        const todayRecords = await getTodayBrushRecordsService(newChild.childId)
-        const weeklyRecords = await getWeeklyBrushRecordsService(newChild.childId)
+        const todayRecords = await getTodayBrushRecordsService(lastChild.childId)
+        const weeklyRecords = await getWeeklyBrushRecordsService(lastChild.childId)
 
         const newBrushingData: ChildBrushingData = {
-          todayBrushing: getBrushingStatusFromRecords(todayRecords),
-          weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords),
+          todayBrushing: getBrushingStatusFromRecords(todayRecords, lastChild),
+          weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords, lastChild),
           todayRecords: todayRecords
         }
 
-        setChildrenBrushingData({
-          ...childrenBrushingData,
-          [newChild.childId]: newBrushingData
-        })
-
-        setSelectedChild(newChild)
-      } else {
-        console.warn('No se encontró el nuevo hijo en la lista actualizada')
-        if (updatedChildren.length > 0) {
-          setSelectedChild(updatedChildren[0])
-        }
+        setChildrenBrushingData((prev) => ({
+          ...prev,
+          [lastChild.childId]: newBrushingData
+        }))
       }
+
       setIsModalOpen(false)
     } catch (error) {
-      console.error('Error al agregar hijo:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      setAddChildError(`Error al agregar el hijo: ${errorMessage}`)
-
-      throw error
+      console.error('Error al actualizar datos después de crear hijo:', error)
+      setAddChildError('Error al actualizar los datos. Por favor, recarga la página.')
     } finally {
       setIsCreatingChild(false)
     }
-  }
-
-  const getBrushingStatusFromRecords = (records: BrushRecord[]): BrushingStatus => {
-    const morningCompleted = records.some((record) => {
-      const hour = new Date(record.brushDatetime).getHours()
-      return hour >= 6 && hour < 12
-    })
-
-    const afternoonCompleted = records.some((record) => {
-      const hour = new Date(record.brushDatetime).getHours()
-      return hour >= 12 && hour < 18
-    })
-
-    const nightCompleted = records.some((record) => {
-      const hour = new Date(record.brushDatetime).getHours()
-      return hour >= 18 || hour < 6
-    })
-
-    return {
-      morning: morningCompleted ? 'completed' : 'pending',
-      afternoon: afternoonCompleted ? 'completed' : 'pending',
-      night: nightCompleted ? 'completed' : 'pending'
-    }
-  }
-
-  const generateWeeklyBrushingFromRecords = (records: BrushRecord[]): DayBrushing[] => {
-    const days: DayBrushing[] = []
-    const today = new Date()
-
-    const firstDayOfWeek = new Date(today)
-    const dayOfWeek = today.getDay()
-    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
-    firstDayOfWeek.setDate(diff)
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(firstDayOfWeek)
-      date.setDate(firstDayOfWeek.getDate() + i)
-      const dayStr = date.toISOString().substring(0, 10)
-
-      const dayRecords = records.filter((record) => record.brushDatetime.startsWith(dayStr))
-
-      const morningCompleted = dayRecords.some((record) => {
-        const hour = new Date(record.brushDatetime).getHours()
-        return hour >= 6 && hour < 12
-      })
-
-      const afternoonCompleted = dayRecords.some((record) => {
-        const hour = new Date(record.brushDatetime).getHours()
-        return hour >= 12 && hour < 18
-      })
-
-      const nightCompleted = dayRecords.some((record) => {
-        const hour = new Date(record.brushDatetime).getHours()
-        return hour >= 18 || hour < 6
-      })
-
-      days.push({
-        date,
-        status: {
-          morning: morningCompleted ? 'completed' : 'pending',
-          afternoon: afternoonCompleted ? 'completed' : 'pending',
-          night: nightCompleted ? 'completed' : 'pending'
-        }
-      })
-    }
-
-    return days
   }
 
   const updateTodayBrushing = async (time: 'morning' | 'afternoon' | 'night'): Promise<void> => {
@@ -227,51 +253,31 @@ const HomePage: FC = () => {
     if (!currentData) return
 
     const currentStatus = currentData.todayBrushing[time]
-    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending'
 
     try {
-      if (newStatus === 'completed') {
-        const brushDatetime = new Date()
-        if (time === 'morning') {
-          brushDatetime.setHours(8, 0, 0)
-        } else if (time === 'afternoon') {
-          brushDatetime.setHours(14, 0, 0)
-        } else {
-          brushDatetime.setHours(20, 0, 0)
+      if (currentStatus === 'pending') {
+        await createBrushRecordService(selectedChild.childId)
+
+        const todayRecords = await getTodayBrushRecordsService(selectedChild.childId)
+        const weeklyRecords = await getWeeklyBrushRecordsService(selectedChild.childId)
+
+        const updatedChildData: ChildBrushingData = {
+          todayBrushing: getBrushingStatusFromRecords(todayRecords, selectedChild),
+          weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords, selectedChild),
+          todayRecords: todayRecords
         }
 
-        await createBrushRecordService(selectedChild.childId, brushDatetime.toISOString())
-      } else {
-        const recordToDelete = currentData.todayRecords.find((record) => {
-          const hour = new Date(record.brushDatetime).getHours()
-          if (time === 'morning') return hour >= 6 && hour < 12
-          if (time === 'afternoon') return hour >= 12 && hour < 18
-          if (time === 'night') return hour >= 18 || hour < 6
-          return false
-        })
-
-        if (recordToDelete) {
-          await deleteBrushRecordService(recordToDelete.brushId)
-        }
+        setChildrenBrushingData((prev) => ({
+          ...prev,
+          [selectedChild.childId]: updatedChildData
+        }))
       }
-
-      // Recargar los datos de cepillado
-      const todayRecords = await getTodayBrushRecordsService(selectedChild.childId)
-      const weeklyRecords = await getWeeklyBrushRecordsService(selectedChild.childId)
-
-      const updatedChildData: ChildBrushingData = {
-        todayBrushing: getBrushingStatusFromRecords(todayRecords),
-        weeklyBrushing: generateWeeklyBrushingFromRecords(weeklyRecords),
-        todayRecords: todayRecords
-      }
-
-      setChildrenBrushingData({
-        ...childrenBrushingData,
-        [selectedChild.childId]: updatedChildData
-      })
     } catch (error) {
       console.error('Error al actualizar estado de cepillado:', error)
-      alert('Error al actualizar el estado de cepillado')
+      alert(
+        'Error al actualizar el estado de cepillado: ' +
+          (error instanceof Error ? error.message : 'Error desconocido')
+      )
     }
   }
 
@@ -284,6 +290,10 @@ const HomePage: FC = () => {
       navigate('/fatherDashboard')
     }
     setActiveTab(tab)
+  }
+
+  const handleProfileClick = (): void => {
+    navigate('/profile-selection')
   }
 
   const calculateAge = (birthDateStr: string): number => {
@@ -353,7 +363,13 @@ const HomePage: FC = () => {
     <div className={styles.homePage}>
       <div className={styles.header}>
         <div className={styles.profileSection}>
-          <img src={ProfileAvatar} alt="Profile" className={styles.profileAvatar} />
+          <img
+            src={ProfileAvatar}
+            alt="Profile"
+            className={styles.profileAvatar}
+            onClick={handleProfileClick}
+            style={{ cursor: 'pointer' }}
+          />
           <h1 className={styles.title}>Seguimiento dental familiar</h1>
         </div>
       </div>
@@ -478,7 +494,7 @@ const HomePage: FC = () => {
         onClose={handleCloseModal}
         title="Danos a conocer un poco más sobre tu hijo"
       >
-        <AddChildForm onSubmit={handleAddChild} onCancel={handleCloseModal} />
+        <AddChildForm onCancel={handleCloseModal} onSuccess={handleChildCreated} />
       </Modal>
     </div>
   )

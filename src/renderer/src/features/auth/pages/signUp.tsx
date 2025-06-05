@@ -1,10 +1,7 @@
-<<<<<<< HEAD
-import React, { useState } from 'react'
-=======
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signupService } from '../services/signupService'
-import { loginService } from '../services/loginService'
+import { useAuth } from '../hooks/useAuth'
 import { SignupCredentials, LoginCredentials } from '../types/authTypes'
 import {
   validateType,
@@ -15,7 +12,6 @@ import {
   validatePassword,
   validateConfirmPassword
 } from '@renderer/utils/validators'
->>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6
 import heroImageSignup from '@renderer/assets/images/heroImageSignup.png'
 import InputForm from '@renderer/components/inputForm'
 import InputList from '@renderer/components/inputList'
@@ -30,6 +26,19 @@ const SignUp = (): React.JSX.Element => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const { login } = useAuth()
+  const [errors, setErrors] = useState<{
+    type?: string
+    name?: string
+    lastName?: string
+    birthDate?: string
+    email?: string
+    password?: string
+    confirmPassword?: string
+  }>({})
+  const [signupError, setSignupError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
@@ -40,19 +49,24 @@ const SignUp = (): React.JSX.Element => {
       lastName,
       birthDate,
       email,
-      password
-<<<<<<< HEAD
-    })
-=======
+      password,
+      confirmPassword
     }
+
+    const credentialsLogin: LoginCredentials = { email, password }
 
     try {
       await signupService(credentials)
 
-      const result = await loginService(credentialsLogin)
-      if (result.userType === 'DENTIST') {
+      const loginResult = await login(credentialsLogin)
+
+      console.log('localStorage authToken:', localStorage.getItem('authToken'))
+      console.log('localStorage authExpiration:', localStorage.getItem('authExpiration'))
+      console.log('localStorage userType:', localStorage.getItem('userType'))
+
+      if (loginResult.userType === 'DENTIST') {
         navigate('/formDentist')
-      } else if (result.userType === 'FATHER') {
+      } else if (loginResult.userType === 'FATHER') {
         navigate('/formFather')
       }
     } catch (error) {
@@ -61,7 +75,6 @@ const SignUp = (): React.JSX.Element => {
     } finally {
       setIsLoading(false)
     }
->>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6
   }
 
   return (

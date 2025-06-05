@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { LoginCredentials } from '../types/authTypes'
 import { validateEmail } from '@renderer/utils/validators'
+import { isFormFilledService } from '../services/isFormFilled'
 import heroImage from '@renderer/assets/images/dentalDesign.png'
 >>>>>>> a4a7ab5f26c9375243372c71b90ed8a4ed4f2af6
 import InputForm from '@renderer/components/inputForm'
@@ -53,6 +54,11 @@ const Login = (): React.JSX.Element => {
       console.log('localStorage userType:', localStorage.getItem('userType'))
 
       if (loginResult.userType === 'DENTIST') {
+        const isFormFilled = await isFormFilledService()
+        if (isFormFilled.isFormFilled == false) {
+          navigate('/formDentist')
+          return
+        }
         navigate('/dentistDashboard')
       } else if (loginResult.userType === 'FATHER') {
         navigate('/profile-selection')

@@ -99,8 +99,10 @@
   border-radius: 8px;
 }
 
-.recent-patient svg {
-  margin-right: 10px;
+
+.subtitle {
+  font-size: var(--font-size-h3);
+  color: var(--neutral-dark);
 }
 
 .bottom-nav {
@@ -137,4 +139,13 @@
     border-left: none;
     border-top: 1px solid #ddd;
   }
+}
+
+.loadingAppointments {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: var(--font-size-title1);
+  color: var(--neutral-normal);
 }

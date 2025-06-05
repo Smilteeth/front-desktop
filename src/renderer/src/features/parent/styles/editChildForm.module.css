@@ -1,4 +1,4 @@
-.addChildForm {
+.editChildForm {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -41,8 +41,7 @@
   cursor: not-allowed;
 }
 
-/* Nuevo estilo para el botón continuar */
-.continueButton {
+.saveButton {
   padding: 12px 0;
   border-radius: 10px;
   font-weight: 700;
@@ -57,45 +56,15 @@
   transition: background-color 0.2s;
 }
 
-.continueButton:hover:not(:disabled) {
+.saveButton:hover:not(:disabled) {
   background-color: var(--primary-normal-hover);
 }
 
-.continueButton:active:not(:disabled) {
+.saveButton:active:not(:disabled) {
   background-color: var(--primary-normal-active);
 }
 
-.continueButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--neutral-normal);
-}
-
-/* Mantengo el submitButton para compatibilidad, pero ya no se usa */
-.submitButton {
-  padding: 12px 0;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: var(--font-size-title1);
-  width: 48%;
-  height: 46px;
-  font-family: var(--Quicksand);
-  background-color: var(--primary-normal);
-  border: none;
-  color: var(--primary-light);
-  transition: background-color 0.2s;
-}
-
-.submitButton:hover:not(:disabled) {
-  background-color: var(--primary-normal-hover);
-}
-
-.submitButton:active:not(:disabled) {
-  background-color: var(--primary-normal-active);
-}
-
-.submitButton:disabled {
+.saveButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background-color: var(--neutral-normal);
@@ -124,12 +93,4 @@
 .formField input:invalid,
 .formField select:invalid {
   border-color: var(--error-primary);
-}
-
-/* Indicador visual de campo requerido */
-.formField label:after {
-  content: '';
-  color: var(--error-primary);
-  font-weight: 700;
-  margin-left: 2px;
 }

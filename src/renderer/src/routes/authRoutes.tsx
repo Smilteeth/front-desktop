@@ -16,14 +16,14 @@ import SettingsDentist from '@renderer/features/dentist/pages/settingsDentist'
 import ProfileDentist from '@renderer/features/dentist/pages/profile'
 import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
+import FormFather from '@renderer/features/parent/pages/formFather'
 
 // Child pages
 import Courses from '@renderer/features/child/pages/courses'
 import Dientin from '@renderer/features/child/pages/dientinHome'
 import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
 import CourseDetail from '@renderer/features/child/pages/courseDetail'
-
-// import FormFather from '@renderer/features/parent/pages/formFather' FIXME: Me da error de importación, revisar
 
 function AuthRoutes(): React.JSX.Element {
   return (
@@ -82,7 +82,8 @@ function AuthRoutes(): React.JSX.Element {
       />
 
       {/* Routes for Father */}
-      {/* <Route path="/formFather" element={<FormFather />} /> */}
+
+      <Route path="/formFather" element={<FormFather />} />
       <Route
         path="/profile-selection"
         element={
