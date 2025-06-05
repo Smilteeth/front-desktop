@@ -1,23 +1,39 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from '../styles/coursePlayer.module.css'
 import BackButton from '@renderer/components/backButton'
+import { useParams, useNavigate } from 'react-router-dom'
+import { courseService } from '../services/apiService'
 
-// Definición de interfaces para las props y otros tipos
+// Interfaces para la API
+interface Lesson {
+  lessonId: number
+  courseId: number
+  name: string
+  contentUrl: string
+  duration: string
+  creationDate: string
+  lastModificationDate: string | null
+  isActive: boolean
+}
+
+interface CourseWithLessons {
+  courseId: number
+  name: string
+  description: string
+  creationDate: string
+  isActive: boolean
+  lessons: Lesson[]
+}
+
 interface VideoPlayerScreenProps {
   videoUrl?: string
   courseTitle?: string
+  lessonTitle?: string
   onBack?: () => void
 }
 
-// Mock de datos de video para pruebas
-const MOCK_VIDEO_URL = '/../../../assets/images/prueba.mp4'
-const MOCK_COURSE_TITLE = 'Cepillado Correcto'
-
 // Componente principal de reproducción de video
-const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
-  videoUrl = MOCK_VIDEO_URL,
-  courseTitle = MOCK_COURSE_TITLE
-}) => {
+const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
   // Referencias a elementos DOM
   const videoRef = useRef<HTMLVideoElement>(null)
   const progressBarRef = useRef<HTMLDivElement>(null)
@@ -28,9 +44,57 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
   const [showControls, setShowControls] = useState<boolean>(true)
   const [duration, setDuration] = useState<number>(0)
   const [currentTime, setCurrentTime] = useState<number>(0)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
+  const [course, setCourse] = useState<CourseWithLessons | null>(null)
+
+  // Parámetros de la URL
+  const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>()
+  const navigate = useNavigate()
 
   // Referencia para el temporizador de ocultar controles
   const controlsTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Función para obtener los datos del curso y la lección
+  const fetchLessonData = async (): Promise<void> => {
+    if (!courseId || !lessonId) {
+      setError('Parámetros de URL inválidos')
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      const courseData = await courseService.getCourseById(Number(courseId))
+
+      if (!courseData.isActive) {
+        throw new Error('Este curso no está disponible')
+      }
+
+      const lesson = courseData.lessons.find(
+        (l) => l.lessonId === Number(lessonId) && l.isActive
+      )
+
+      if (!lesson) {
+        throw new Error('Lección no encontrada o no disponible')
+      }
+
+      setCourse(courseData)
+      setCurrentLesson(lesson)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+      console.error('Error fetching lesson data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+  // Cargar datos de la lección al montar el componente
+  useEffect(() => {
+    fetchLessonData()
+  }, [courseId, lessonId])
 
   // Maneja la reproducción y pausa del video
   const togglePlayPause = (): void => {
@@ -60,10 +124,28 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
     setCurrentTime(ct)
 
     if (ct >= dur - 0.5) {
-      // aviso de finalización
-      setTimeout(() => alert('¡Muy bien! ¡Has completado esta lección! 🎉'), 300)
+      // Aviso de finalización y navegación a la siguiente lección
+      setTimeout(() => {
+        alert('¡Muy bien! ¡Has completado esta lección! 🎉')
+        navigateToNextLesson()
+      }, 300)
     }
   }, [])
+
+  // Navegar a la siguiente lección
+  const navigateToNextLesson = (): void => {
+    if (!course || !currentLesson) return
+
+    const currentIndex = course.lessons.findIndex(l => l.lessonId === currentLesson.lessonId)
+    if (currentIndex < course.lessons.length - 1) {
+      const nextLesson = course.lessons[currentIndex + 1]
+      navigate(`/courses/course/${courseId}/lesson/${nextLesson.lessonId}`)
+    } else {
+      // Última lección completada, volver al detalle del curso
+      alert('¡Felicidades! ¡Has completado todo el curso! 🎊')
+      navigate(`/courses/course/${courseId}`)
+    }
+  }
 
   // Maneja el clic en la barra de progreso para saltar a diferentes partes del video
   const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>): void => {
@@ -103,21 +185,15 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
   useEffect(() => {
     const video = videoRef.current
 
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const handleLoadedMetadata = () => {
+    const handleLoadedMetadata = (): void => {
       if (video) setDuration(video.duration)
     }
 
     if (!video) return
-    // Evento para detectar cuando los metadatos del video están cargados
 
-    // Evento para actualizar el progreso
+    // Eventos del video
     video.addEventListener('timeupdate', updateProgressBar)
-
-    // Evento para obtener la duración cuando los metadatos están listos
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
-
-    // Eventos para actualizar el estado de reproducción
     video.addEventListener('play', () => setIsPlaying(true))
     video.addEventListener('pause', () => setIsPlaying(false))
     video.addEventListener('ended', () => setIsPlaying(false))
@@ -136,12 +212,49 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
         clearTimeout(controlsTimerRef.current)
       }
     }
-  }, [updateProgressBar])
+  }, [updateProgressBar, currentLesson])
 
   // Reinicia el temporizador de controles cuando cambia el estado de reproducción
   useEffect(() => {
     resetControlsTimer()
   }, [resetControlsTimer])
+
+  if (loading) {
+    return (
+      <div className={styles['video-player-container']}>
+        <div className={styles['loading-container']}>
+          <BackButton />
+          <p>Cargando lección...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles['video-player-container']}>
+        <div className={styles['error-container']}>
+          <BackButton />
+          <h2>¡Oops!</h2>
+          <p>{error}</p>
+          <button onClick={fetchLessonData} className={styles['retry-button']}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentLesson || !course) {
+    return (
+      <div className={styles['video-player-container']}>
+        <div className={styles['error-container']}>
+          <BackButton />
+          <p>Lección no encontrada</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -152,7 +265,10 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
       {/* ─── Encabezado ───────────────────────────── */}
       <div className={`${styles.header} ${showControls ? styles.visible : styles.hidden}`}>
         <BackButton />
-        <h1 className={styles.title}>{courseTitle}</h1>
+        <div className={styles['title-container']}>
+          <h1 className={styles.title}>{course.name}</h1>
+          <h2 className={styles.subtitle}>{currentLesson.name}</h2>
+        </div>
       </div>
 
       {/* ─── Video ───────────────────────────────── */}
@@ -160,14 +276,17 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
         <video
           ref={videoRef}
           className={styles['video-element']}
-          src={videoUrl}
+          src={currentLesson.contentUrl}
           onClick={togglePlayPause}
           playsInline
+          crossOrigin="anonymous"
         />
 
         {!isPlaying && (
           <button className={styles['play-pause-button']} onClick={togglePlayPause}>
-            {/* SVG play icon */}
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
           </button>
         )}
       </div>
@@ -188,6 +307,13 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = ({
           onClick={handleProgressBarClick}
         >
           <div className={styles['progress-filled']} style={{ width: `${progress}%` }} />
+        </div>
+
+        {/* Información de la lección */}
+        <div className={styles['lesson-info']}>
+          <span className={styles['lesson-number']}>
+            {course.lessons.findIndex(l => l.lessonId === currentLesson.lessonId) + 1} / {course.lessons.length}
+          </span>
         </div>
 
         {/* Dientes */}
