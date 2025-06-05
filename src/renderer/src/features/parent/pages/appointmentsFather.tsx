@@ -12,6 +12,9 @@ import {
   cancelAppointmentService,
   rescheduleAppointmentService
 } from '../services/appointmentService'
+import CancelAppointmentModal from '../components/cancelAppointment'
+import RescheduleAppointmentModal from '../components/rescheduleAppointment'
+import { getAppointmentsService, AppointmentResponse } from '../services/appointmentService'
 import { getChildrenService } from '../services/childService'
 import { getDentistsForSelectService } from '../services/dentistService'
 import styles from '../styles/appointmentsFather.module.css'
@@ -33,6 +36,14 @@ interface ChildData {
   childId: number
   name: string
   lastName: string
+}
+
+interface CancelModalData {
+  appointmentId: string
+}
+
+interface RescheduleModalData {
+  appointment: AppointmentResponse
 }
 
 interface CancelModalData {
@@ -65,6 +76,12 @@ const AppointmentsPage: FC = () => {
   const [showCancelSuccess, setShowCancelSuccess] = useState(false)
   const [showRescheduleSuccess, setShowRescheduleSuccess] = useState(false)
   const [rescheduleNewDateTime, setRescheduleNewDateTime] = useState<string>('')
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+  const [cancelModalData, setCancelModalData] = useState<CancelModalData | null>(null)
+
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false)
+  const [rescheduleModalData, setRescheduleModalData] = useState<RescheduleModalData | null>(null)
 
   useEffect(() => {
     fetchAllData()
@@ -147,6 +164,13 @@ const AppointmentsPage: FC = () => {
   }
 
   const handleRescheduleClick = (appointmentId: string): void => {
+  const isAppointmentInPast = (appointmentDateTime: string): boolean => {
+    const appointmentDate = new Date(appointmentDateTime)
+    const now = new Date()
+    return appointmentDate <= now
+  }
+
+  const handleRescheduleClick = (appointmentId: string): void => {
     const appointment = allAppointments.find((a) => a.appointmentId.toString() === appointmentId)
 
     if (!appointment) {
@@ -199,6 +223,57 @@ const AppointmentsPage: FC = () => {
   const handleRescheduleSuccessContinue = (): void => {
     setShowRescheduleSuccess(false)
     setRescheduleNewDateTime('')
+    // Verificar si la cita ya pasó
+    if (isAppointmentInPast(appointment.appointmentDatetime)) {
+      alert('No se pueden reagendar citas que ya han pasado')
+      return
+    }
+
+    // Preparar datos para el modal
+    const modalData: RescheduleModalData = {
+      appointment
+    }
+
+    setRescheduleModalData(modalData)
+    setIsRescheduleModalOpen(true)
+  }
+
+  const handleRescheduleConfirm = (newDateTime: string, reason: string): void => {
+    if (!rescheduleModalData) return
+
+    // Por ahora solo mostrar un mensaje
+    console.log('Reagendando cita:', {
+      appointmentId: rescheduleModalData.appointment.appointmentId,
+      newDateTime: newDateTime,
+      reason: reason
+    })
+
+    // Formatear la nueva fecha y hora para mostrar
+    const newDate = new Date(newDateTime)
+    const formattedDate = newDate.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    const formattedTime = newDate.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+
+    alert(`Cita reagendada exitosamente para el ${formattedDate} a las ${formattedTime}`)
+    // Servicio para reagendar
+    // await rescheduleAppointmentService(rescheduleModalData.appointment.appointmentId, newDateTime, reason)
+
+    fetchAllData()
+
+    setIsRescheduleModalOpen(false)
+    setRescheduleModalData(null)
+  }
+
+  const handleRescheduleModalClose = (): void => {
+    setIsRescheduleModalOpen(false)
+    setRescheduleModalData(null)
   }
 
   const handleCancelClick = (appointmentId: string): void => {
@@ -231,6 +306,34 @@ const AppointmentsPage: FC = () => {
       await cancelAppointmentService(parseInt(cancelModalData.appointmentId), reason)
 
       await fetchAllData()
+  const handleCancelClick = (appointmentId: string): void => {
+    const appointment = allAppointments.find((a) => a.appointmentId.toString() === appointmentId)
+
+    if (!appointment) {
+      alert('Cita no encontrada')
+      return
+    }
+
+    if (isAppointmentInPast(appointment.appointmentDatetime)) {
+      alert('No se pueden cancelar citas que ya han pasado')
+      return
+    }
+
+    const modalData: CancelModalData = {
+      appointmentId
+    }
+
+    setCancelModalData(modalData)
+    setIsCancelModalOpen(true)
+  }
+
+  const handleCancelConfirm = (reason: string): void => {
+    if (!cancelModalData) return
+
+    console.log('Cancelando cita:', {
+      appointmentId: cancelModalData.appointmentId,
+      reason: reason
+    })
 
       setIsCancelModalOpen(false)
       setCancelModalData(null)
@@ -251,6 +354,20 @@ const AppointmentsPage: FC = () => {
 
   const handleCancelSuccessContinue = (): void => {
     setShowCancelSuccess(false)
+    alert('Cita cancelada exitosamente')
+
+    // Servicio de cancelar
+    // await cancelAppointmentService(parseInt(cancelModalData.appointmentId), reason)
+
+    fetchAllData()
+
+    setIsCancelModalOpen(false)
+    setCancelModalData(null)
+  }
+
+  const handleCancelModalClose = (): void => {
+    setIsCancelModalOpen(false)
+    setCancelModalData(null)
   }
 
   const navigateToDentists = (): void => {
@@ -351,6 +468,8 @@ const AppointmentsPage: FC = () => {
                     doctorName={getDentistName(appointment.dentistId)}
                     onReschedule={handleRescheduleClick}
                     onCancel={handleCancelClick}
+                    onReschedule={handleRescheduleClick}
+                    onCancel={handleCancelClick}
                   />
                 ))
               ) : (
@@ -433,6 +552,22 @@ const AppointmentsPage: FC = () => {
         isOpen={showRescheduleSuccess}
         onContinue={handleRescheduleSuccessContinue}
         newDateTime={rescheduleNewDateTime}
+      />
+
+      {/* Modal de cancelación de cita */}
+      <CancelAppointmentModal
+        isOpen={isCancelModalOpen}
+        onClose={handleCancelModalClose}
+        onConfirm={handleCancelConfirm}
+      />
+
+      {/* Modal de reagendamiento de cita */}
+      <RescheduleAppointmentModal
+        isOpen={isRescheduleModalOpen}
+        onClose={handleRescheduleModalClose}
+        onConfirm={handleRescheduleConfirm}
+        appointment={rescheduleModalData?.appointment || null}
+        existingAppointments={allAppointments}
       />
     </div>
   )

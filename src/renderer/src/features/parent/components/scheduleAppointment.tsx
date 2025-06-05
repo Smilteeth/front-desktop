@@ -127,6 +127,7 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
     }
   }
 
+
   const isDateTimeFuture = (date: string, time: string): boolean => {
     if (!date || !time) return false
 
@@ -217,6 +218,7 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
     return null
   }
 
+  // Simplified handleDateChange using extracted validation
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newDate = e.target.value
     setAppointmentDate(newDate)
@@ -232,6 +234,8 @@ const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
     setAppointmentTime(newTime)
 
     if (appointmentDate && newTime) {
+      const validationError = validateDateTime(appointmentDate, newTime)
+      setError(validationError)
       const validationError = validateDateTime(appointmentDate, newTime)
       setError(validationError)
     }
