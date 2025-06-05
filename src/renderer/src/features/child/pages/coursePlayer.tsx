@@ -276,7 +276,7 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
         <video
           ref={videoRef}
           className={styles['video-element']}
-          src={currentLesson.contentUrl}
+          src= {currentLesson.contentUrl}
           onClick={togglePlayPause}
           playsInline
           crossOrigin="anonymous"
