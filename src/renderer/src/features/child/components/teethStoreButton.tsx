@@ -12,10 +12,12 @@ export const MenuButtons: React.FC<MenuButtonsProps> = () => {
 
   const handleStoreClick = (): void => {
     setShowStoreModal(true)
+    setShowCustomizeModal(false) // Asegura que solo se abre uno
   }
 
   const handleCustomizeClick = (): void => {
     setShowCustomizeModal(true)
+    setShowStoreModal(false) // Asegura que solo se abre uno
   }
 
   const closeModals = (): void => {
@@ -42,45 +44,42 @@ export const MenuButtons: React.FC<MenuButtonsProps> = () => {
         <span>Personalizar</span>
       </button>
 
-      <div className={styles.menuButtons}>
-        {/* Botones existentes - no cambiar */}
-
-        {/* Modal de Tienda */}
-        {showStoreModal && (
-          <div className={styles.modalOverlay} onClick={closeModals}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <h2>Tienda</h2>
-              <div className={styles.itemGrid}>
-                <div className={styles.itemCard}>🦷 Cepillo Especial</div>
-                <div className={styles.itemCard}>✨ Pasta Brillante</div>
-                <div className={styles.itemCard}>🎵 Canción Dental</div>
-                <div className={styles.itemCard}>🏆 Trofeo Oro</div>
-              </div>
-              <button className={styles.closeBtn} onClick={closeModals}>
-                Cerrar
-              </button>
+      {/* Modal de Tienda */}
+      {showStoreModal && (
+        <div className={styles.modalOverlay} onClick={closeModals}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2>Tienda</h2>
+            <div className={styles.itemGrid}>
+              <div className={styles.itemCard}>🦷 Cepillo Especial</div>
+              <div className={styles.itemCard}>✨ Pasta Brillante</div>
+              <div className={styles.itemCard}>🎵 Canción Dental</div>
+              <div className={styles.itemCard}>🏆 Trofeo Oro</div>
             </div>
+            <button className={styles.closeBtn} onClick={closeModals}>
+              Cerrar
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de Personalizar */}
-        {showCustomizeModal && (
-          <div className={styles.modalOverlay} onClick={closeModals}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <h2>Personalizar</h2>
-              <div className={styles.itemGrid}>
-                <div className={styles.itemCard}>🎨 Colores</div>
-                <div className={styles.itemCard}>👕 Ropa</div>
-                <div className={styles.itemCard}>🎩 Sombreros</div>
-                <div className={styles.itemCard}>👓 Gafas</div>
-              </div>
-              <button className={styles.closeBtn} onClick={closeModals}>
-                Cerrar
-              </button>
+      {/* Modal de Personalizar */}
+      {showCustomizeModal && (
+        <div className={styles.modalOverlay} onClick={closeModals}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2>Personalizar</h2>
+            <div className={styles.itemGrid}>
+              <div className={styles.itemCard}>🎨 Colores</div>
+              <div className={styles.itemCard}>👕 Ropa</div>
+              <div className={styles.itemCard}>🎩 Sombreros</div>
+              <div className={styles.itemCard}>👓 Gafas</div>
             </div>
+            <button className={styles.closeBtn} onClick={closeModals}>
+              Cerrar
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
+

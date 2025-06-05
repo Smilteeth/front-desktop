@@ -73,21 +73,27 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
 }
 
+
 .modalContent {
+  position: absolute;
+  top: 50%;
+  left: 80px; /* distancia al botón activador, ajusta a tu gusto */
+  transform: translateY(-50%);
   background: white;
   border-radius: 20px;
   padding: 30px;
-  max-width: 500px;
-  width: 95%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: modalAppear 0.3s ease;
+
+  /* Ajustes clave */
+  width: fit-content;
+  min-width: 220px; /* un poco más que los botones azules */
+  margin: 0; /* elimina centrado automático para que quede junto al botón activador */
 }
+
 
 .modalContent h2 {
   text-align: center;
@@ -123,12 +129,13 @@
   background: #FF6B9D;
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 15px 20px;
+  border-radius: 25px; /* igual que los botones azules */
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 }
+
 
 @keyframes modalAppear {
   from {
