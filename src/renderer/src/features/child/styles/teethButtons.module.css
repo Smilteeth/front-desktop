@@ -83,15 +83,15 @@
   background: white;
   border-radius: 20px;
   padding: 30px;
-  max-width: 400px;
-  width: 90%;
+  max-width: 500px;
+  width: 95%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: modalAppear 0.3s ease;
 }
 
 .modalContent h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
   color: #333;
 }
 
@@ -105,12 +105,13 @@
 .itemCard {
   background: linear-gradient(45deg, #4FC3F7, #29B6F6);
   color: white;
-  padding: 20px;
+  padding: 30px;
   border-radius: 15px;
   text-align: center;
   cursor: pointer;
   transition: transform 0.2s;
   font-weight: bold;
+  font-size: 16px;
 }
 
 .itemCard:hover {

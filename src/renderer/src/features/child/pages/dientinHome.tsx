@@ -1,16 +1,21 @@
 import CoursesIcon from '@renderer/components/coursesIcon'
 import styles from '../styles/dientinMenu.module.css'
-
 import React from 'react'
-// import { useNavigate } from 'react-router-dom';
 import TeethIconActive from '@renderer/components/teethIconActive'
 import { Header } from '../components/childHeader'
 import { MenuButtons } from '../components/teethStoreButton'
-// import { openNotifications } from '@renderer/utils/notifications';
 import { useNavigate } from 'react-router-dom'
+import { ToothCharacter } from '../components/mascotaDientin'
+
+// import { openNotifications } from '@renderer/utils/notifications';
+// import { useNavigate } from 'react-router-dom';
 
 export default function DentistScreen(): React.JSX.Element {
   const navigate = useNavigate()
+  const handleToothClick = (): void => {
+    console.log('¡Diente clickeado!')
+    // Aquí puedes agregar lógica adicional
+  }
 
   return (
     <div className={styles['dientin-body']}>
@@ -26,7 +31,9 @@ export default function DentistScreen(): React.JSX.Element {
           onCustomizeClick={() => navigate('/customize')}
         />
       </main>
-
+      <div className='dientin-character-container'>
+        <ToothCharacter onClick={handleToothClick} />
+      </div>
       <footer className={styles['navigation-footer']}>
         <button className={styles['nav-button']}>
           {/*onClick={() => navigate('/courses')}> */}
