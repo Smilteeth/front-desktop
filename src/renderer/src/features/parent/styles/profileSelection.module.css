@@ -65,3 +65,12 @@
     color: var(--neutral-darker);
     text-align: center;
 }
+
+.errorTitle {
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  color: var(--error-primary);
+  margin-bottom: 20px;
+  text-align: center;
+  font-family: var(--Quicksand);
+}
