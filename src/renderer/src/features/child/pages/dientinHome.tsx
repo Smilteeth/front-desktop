@@ -30,10 +30,15 @@ export default function DentistScreen(): React.JSX.Element {
           onStoreClick={() => navigate('/store')}
           onCustomizeClick={() => navigate('/customize')}
         />
+        <div className={styles['tooth-character-container']}>
+          <ToothCharacter onClick={handleToothClick} />
+        </div>
       </main>
-      <div className='dientin-character-container'>
-        <ToothCharacter onClick={handleToothClick} />
-      </div>
+
+      {/* <div className='dientin-character-container'>
+        <ToothCharacter onClick={handleToothClick}/>
+      </div> */}
+
       <footer className={styles['navigation-footer']}>
         <button className={styles['nav-button']}>
           {/*onClick={() => navigate('/courses')}> */}
