@@ -24,10 +24,7 @@ const InputForm: React.FC<InputProps> = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false)
 
-  const isDateTimeType = ['date', 'time', 'datetime-local', 'month', 'week'].includes(type)
-
-  // Mostrar label si está enfocado, tiene valor o es un tipo date/time
-  const showLabel = isFocused || value.length > 0 || isDateTimeType
+  const showLabel = isFocused || value.length > 0
 
   return (
     <div className={styles.container}>

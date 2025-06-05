@@ -1,13 +1,9 @@
 import React, { useState } from 'react'
 import styles from '../styles/inputList.module.css'
 
-interface Option {
-  label: string
-  value: string
-}
-
 interface SelectListProps {
-  options: Option[]
+  option1: string
+  option2: string
   label: string
   name: string
   value: string
@@ -17,7 +13,8 @@ interface SelectListProps {
 }
 
 const SelectList: React.FC<SelectListProps> = ({
-  options,
+  option1,
+  option2,
   label,
   name,
   value,
@@ -26,6 +23,7 @@ const SelectList: React.FC<SelectListProps> = ({
   required
 }) => {
   const [isFocused, setIsFocused] = useState(false)
+
   const showLabel = isFocused || value.length > 0
 
   return (
@@ -48,11 +46,8 @@ const SelectList: React.FC<SelectListProps> = ({
         <option value="" disabled hidden>
           {placeholder}
         </option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        <option value={option1}>{option1}</option>
+        <option value={option2}>{option2}</option>
       </select>
     </div>
   )

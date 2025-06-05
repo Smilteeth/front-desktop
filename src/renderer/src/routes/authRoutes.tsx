@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import Login from '@renderer/features/auth/pages/login'
 import Signup from '@renderer/features/auth/pages/signUp'
 import FormDentis from '@renderer/features/dentist/pages/formDentis'
@@ -17,6 +18,12 @@ import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
 import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import FormFather from '@renderer/features/parent/pages/formFather'
+
+// Child pages
+import Courses from '@renderer/features/child/pages/courses'
+import Dientin from '@renderer/features/child/pages/dientinHome'
+import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
+import CourseDetail from '@renderer/features/child/pages/courseDetail'
 
 function AuthRoutes(): React.JSX.Element {
   return (
@@ -75,6 +82,7 @@ function AuthRoutes(): React.JSX.Element {
       />
 
       {/* Routes for Father */}
+
       <Route path="/formFather" element={<FormFather />} />
       <Route
         path="/profile-selection"
@@ -129,6 +137,38 @@ function AuthRoutes(): React.JSX.Element {
         element={
           <ProtectedRoute>
             <ChildDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses"
+        element={
+          <ProtectedRoute>
+            <Courses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dientin"
+        element={
+          <ProtectedRoute>
+            <Dientin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses/course/:courseId/lesson/:lessonId"
+        element={
+          <ProtectedRoute>
+            <CoursePlayer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses/course/:courseId"
+        element={
+          <ProtectedRoute>
+            <CourseDetail />
           </ProtectedRoute>
         }
       />

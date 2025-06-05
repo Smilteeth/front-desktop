@@ -23,31 +23,16 @@
 .formContainer {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  margin: 0 auto;
   width: 50%;
-  max-width: 512px;
   padding: 20px;
   overflow-y: auto;
-
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-@media (max-height: 600px) {
-  .formContainer {
-    justify-content: flex-start;
-  }
-}
-
-.formContainer::-webkit-scrollbar {
-  display: none;
 }
 
 .formContainer h1 {
   font-size: var(font-size-h1);
   font-weight: 700;
   color: var(--primary-darker);
+  margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
@@ -59,7 +44,7 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 3rem;
   padding-bottom: 2rem;
 }
 
@@ -68,39 +53,4 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-}
-
-.errorMessage {
-  color: var(--error-primary);
-  font-size: var(--font-size-body);
-  font-weight: 700;
-}
-
-.signupError {
-  color: var(--error-primary);
-  font-size: var(--font-size-title2);
-  font-weight: 700;
-  text-align: center;
-}
-
-.registerPrompt {
-  text-align: center;
-  font-size: var(--font-size-title1);
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-
-.registerPrompt a {
-  color: var(--tertiary-dark);
-  text-decoration: none;
-}
-
-.registerPrompt a:hover {
-  text-decoration: underline;
-}
-
-.loginLink u {
-  color: var(--tertiary-dark);
-  font-size: var(--font-size-title1);
-  font-weight: 700;
 }
