@@ -3,109 +3,182 @@ import { validateName, validateLastName } from '@renderer/utils/validators'
 
 const API_BASE_URL = 'https://smiltheet-api.rafabeltrans17.workers.dev/api/child'
 
+interface ApiResponse {
+  items?: ChildResponse[]
+}
+
+type HttpMethod = 'GET' | 'PUT' | 'POST' | 'DELETE'
+
+const getAuthToken = (): string => {
+  const token = localStorage.getItem('authToken')
+  if (!token) {
+    throw new Error(
+      'No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.'
+    )
+  }
+  return token
+}
+
+const createApiHeaders = (token: string): Record<string, string> => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`
+})
+
+const ERROR_MESSAGES: Record<number, Record<string, string>> = {
+  400: {
+    default: 'Datos del niño inválidos. Verifica que todos los campos estén completos.'
+  },
+  401: {
+    default: 'No tienes autorización. Por favor, inicia sesión nuevamente.'
+  },
+  404: {
+    create: 'No se encontró el dentista especificado.',
+    default: 'Niño no encontrado'
+  },
+  409: {
+    default: 'Conflicto: Ya existe un niño con esos datos o el dentista no es válido.'
+  }
+}
+
+const handleApiError = (response: Response, operation: string): never => {
+  const statusMessages = ERROR_MESSAGES[response.status]
+  const message =
+    statusMessages?.[operation] ||
+    statusMessages?.default ||
+    `Error al ${operation} el niño: ${response.status}`
+  throw new Error(message)
+}
+
+const validateRequiredFields = (childData: ChildData): void => {
+  const requiredFields = [
+    'name',
+    'lastName',
+    'dentistId',
+    'gender',
+    'birthDate',
+    'morningBrushingTime',
+    'afternoonBrushingTime',
+    'nightBrushingTime'
+  ] as const
+
+  for (const field of requiredFields) {
+    if (!childData[field]) {
+      throw new Error(`El campo ${field} es requerido`)
+    }
+  }
+}
+
+const validateNameFields = (childData: ChildData): void => {
+  const nameError = validateName(childData.name)
+  if (nameError) throw new Error(nameError)
+
+  const lastNameError = validateLastName(childData.lastName)
+  if (lastNameError) throw new Error(lastNameError)
+}
+
+const validateGenderField = (gender: string): void => {
+  const normalizedGender = gender.toUpperCase()
+  if (normalizedGender !== 'M' && normalizedGender !== 'F') {
+    throw new Error('El género debe ser M o F')
+  }
+}
+
+const validateChildData = (childData: ChildData): void => {
+  validateRequiredFields(childData)
+  validateNameFields(childData)
+  validateGenderField(childData.gender)
+}
+
+const isArrayResponse = (data: unknown): data is ChildResponse[] => {
+  return Array.isArray(data)
+}
+
+const isObjectWithItems = (data: unknown): data is ApiResponse => {
+  return typeof data === 'object' && data !== null && 'items' in data
+}
+
+const normalizeChildItem = (child: ChildResponse): ChildResponse => ({
+  ...child,
+  nextAppointment: child.nextAppointment || null
+})
+
+const normalizeChildrenResponse = (data: unknown): ChildResponse[] => {
+  if (!data) return []
+
+  if (isArrayResponse(data)) {
+    return data.map(normalizeChildItem)
+  }
+
+  if (isObjectWithItems(data)) {
+    const response = data as ApiResponse
+    return response.items?.map(normalizeChildItem) || []
+  }
+
+  return []
+}
+
+const makeApiRequest = async (
+  url: string,
+  method: HttpMethod = 'GET',
+  body?: object
+): Promise<Response> => {
+  const token = getAuthToken()
+  const options: RequestInit = {
+    method,
+    headers: createApiHeaders(token)
+  }
+
+  if (body) {
+    options.body = JSON.stringify(body)
+  }
+
+  return fetch(url, options)
+}
+
+const validateAndTrimName = (name: string): string => {
+  const nameError = validateName(name)
+  if (nameError) throw new Error(nameError)
+  return name.trim()
+}
+
+const validateAndTrimLastName = (lastName: string): string => {
+  const lastNameError = validateLastName(lastName)
+  if (lastNameError) throw new Error(lastNameError)
+  return lastName.trim()
+}
+
+const processUpdateFields = (childData: Partial<ChildData>): Partial<ChildData> => {
+  const processedData = { ...childData }
+
+  if (processedData.name !== undefined) {
+    processedData.name = validateAndTrimName(processedData.name)
+  }
+
+  if (processedData.lastName !== undefined) {
+    processedData.lastName = validateAndTrimLastName(processedData.lastName)
+  }
+
+  return processedData
+}
+
 export async function createChildService(childData: ChildData): Promise<CreateChildResult> {
   try {
-    const authToken = localStorage.getItem('authToken')
-
-    if (!authToken) {
-      throw new Error(
-        'No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.'
-      )
-    }
-
-    const requiredFields = [
-      'name',
-      'lastName',
-      'dentistId',
-      'gender',
-      'birthDate',
-      'morningBrushingTime',
-      'afternoonBrushingTime',
-      'nightBrushingTime'
-    ]
-
-    for (const field of requiredFields) {
-      if (!childData[field as keyof ChildData]) {
-        throw new Error(`El campo ${field} es requerido`)
-      }
-    }
-
-    const nameValidation = validateName(childData.name)
-    if (nameValidation) {
-      throw new Error(nameValidation)
-    }
-
-    const lastNameValidation = validateLastName(childData.lastName)
-    if (lastNameValidation) {
-      throw new Error(lastNameValidation)
-    }
-
-    const gender = childData.gender.toUpperCase()
-    if (gender !== 'M' && gender !== 'F') {
-      throw new Error('El género debe ser M o F')
-    }
+    validateChildData(childData)
 
     const requestBody = {
+      ...childData,
       name: childData.name.trim(),
       lastName: childData.lastName.trim(),
-      gender: gender as 'M' | 'F',
-      birthDate: childData.birthDate,
-      dentistId: childData.dentistId,
-      morningBrushingTime: childData.morningBrushingTime,
-      afternoonBrushingTime: childData.afternoonBrushingTime,
-      nightBrushingTime: childData.nightBrushingTime
+      gender: childData.gender.toUpperCase() as 'M' | 'F'
     }
 
-    const response = await fetch(API_BASE_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      },
-      body: JSON.stringify(requestBody)
-    })
+    const response = await makeApiRequest(API_BASE_URL, 'PUT', requestBody)
 
     if (!response.ok) {
-      let errorMessage = `Error al crear el niño: ${response.status}`
-
-      try {
-        const errorData = await response.text()
-        console.error('Error del servidor:', errorData)
-
-        try {
-          const parsedError = JSON.parse(errorData)
-          errorMessage = parsedError.message || errorData
-        } catch {
-          errorMessage = errorData || errorMessage
-        }
-      } catch (e) {
-        console.error('Error al leer respuesta de error:', e)
-      }
-
-      switch (response.status) {
-        case 400:
-          throw new Error(
-            'Datos del niño inválidos. Verifica que todos los campos estén completos.'
-          )
-        case 401:
-          throw new Error('No tienes autorización. Por favor, inicia sesión nuevamente.')
-        case 409:
-          if (errorMessage.includes('UNIQUE') || errorMessage.includes('unique')) {
-            throw new Error('Ya existe un niño con esos datos.')
-          } else if (errorMessage.includes('FOREIGN KEY') || errorMessage.includes('foreign')) {
-            throw new Error('El dentista seleccionado no es válido.')
-          } else {
-            throw new Error('Conflicto al crear el niño: ' + errorMessage)
-          }
-        case 404:
-          throw new Error('No se encontró el dentista especificado.')
-        default:
-          throw new Error(errorMessage)
-      }
+      handleApiError(response, 'crear')
     }
 
-    const data = await response.json()
-    return data as CreateChildResult
+    return (await response.json()) as CreateChildResult
   } catch (error) {
     console.error('Error en createChildService:', error)
     throw error
@@ -114,60 +187,16 @@ export async function createChildService(childData: ChildData): Promise<CreateCh
 
 export async function getChildrenService(): Promise<ChildResponse[]> {
   try {
-    const authToken = localStorage.getItem('authToken')
-    if (!authToken) {
-      console.warn('No se encontró token de autenticación')
-      return []
-    }
+    const response = await makeApiRequest(API_BASE_URL)
 
-    const response = await fetch(API_BASE_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      }
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-
-      let childrenArray: ChildResponse[] = []
-
-      if (data.items && Array.isArray(data.items)) {
-        childrenArray = data.items
-      } else if (Array.isArray(data)) {
-        childrenArray = data
-      } else {
-        console.warn('Formato inesperado de respuesta:', data)
-        return []
-      }
-
-      const mappedChildren = childrenArray.map(
-        (child: ChildResponse): ChildResponse => ({
-          childId: child.childId,
-          fatherId: child.fatherId,
-          dentistId: child.dentistId,
-          name: child.name,
-          lastName: child.lastName,
-          gender: child.gender,
-          birthDate: child.birthDate,
-          morningBrushingTime: child.morningBrushingTime,
-          afternoonBrushingTime: child.afternoonBrushingTime,
-          nightBrushingTime: child.nightBrushingTime,
-          creationDate: child.creationDate,
-          lastModificationDate: child.lastModificationDate,
-          isActive: child.isActive,
-          nextAppointment: child.nextAppointment || null
-        })
-      )
-
-      return mappedChildren as ChildResponse[]
-    } else if (response.status === 404) {
-      return []
-    } else {
+    if (response.status === 404) return []
+    if (!response.ok) {
       console.error(`Error HTTP: ${response.status}`)
       return []
     }
+
+    const data = await response.json()
+    return normalizeChildrenResponse(data)
   } catch (error) {
     console.error('Error en getChildrenService:', error)
     return []
@@ -176,31 +205,13 @@ export async function getChildrenService(): Promise<ChildResponse[]> {
 
 export async function getChildByIdService(childId: number): Promise<ChildResponse> {
   try {
-    const authToken = localStorage.getItem('authToken')
-    if (!authToken) {
-      throw new Error('No se encontró el token de autenticación')
-    }
-
-    const response = await fetch(`${API_BASE_URL}/${childId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      }
-    })
+    const response = await makeApiRequest(`${API_BASE_URL}/${childId}`)
 
     if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Niño no encontrado')
-      }
-      if (response.status === 401) {
-        throw new Error('El niño no te pertenece o no tienes autorización')
-      }
-      throw new Error(`Error al obtener el niño: ${response.status}`)
+      handleApiError(response, 'obtener')
     }
 
-    const data = await response.json()
-    return data as ChildResponse
+    return (await response.json()) as ChildResponse
   } catch (error) {
     console.error('Error en getChildByIdService:', error)
     throw error
@@ -212,38 +223,11 @@ export async function updateChildService(
   childData: Partial<ChildData>
 ): Promise<{ message: string }> {
   try {
-    const authToken = localStorage.getItem('authToken')
-    if (!authToken) {
-      throw new Error('No se encontró el token de autenticación')
-    }
-
-    if (childData.name !== undefined) {
-      const nameValidation = validateName(childData.name)
-      if (nameValidation) {
-        throw new Error(nameValidation)
-      }
-      childData.name = childData.name.trim()
-    }
-
-    if (childData.lastName !== undefined) {
-      const lastNameValidation = validateLastName(childData.lastName)
-      if (lastNameValidation) {
-        throw new Error(lastNameValidation)
-      }
-      childData.lastName = childData.lastName.trim()
-    }
-
-    const response = await fetch(`${API_BASE_URL}/${childId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`
-      },
-      body: JSON.stringify(childData)
-    })
+    const processedData = processUpdateFields(childData)
+    const response = await makeApiRequest(`${API_BASE_URL}/${childId}`, 'PUT', processedData)
 
     if (!response.ok) {
-      throw new Error(`Error al actualizar el niño: ${response.status}`)
+      handleApiError(response, 'actualizar')
     }
 
     const data = await response.json()
@@ -254,5 +238,5 @@ export async function updateChildService(
     throw error
   }
 }
-export type { ChildResponse }
-export type { ChildData }
+
+export type { ChildResponse, ChildData }

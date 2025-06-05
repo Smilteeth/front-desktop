@@ -1,6 +1,5 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import Login from '@renderer/features/auth/pages/login'
 import Signup from '@renderer/features/auth/pages/signUp'
 import FormDentis from '@renderer/features/dentist/pages/formDentis'
@@ -16,6 +15,7 @@ import SettingsDentist from '@renderer/features/dentist/pages/settingsDentist'
 import ProfileDentist from '@renderer/features/dentist/pages/profile'
 import ChildrenPage from '../features/parent/pages/childrenPage'
 import ChildDetail from '@renderer/features/parent/pages/childDetail'
+import { ProtectedRoute } from '@renderer/features/auth/components/protectedRoute'
 import FormFather from '@renderer/features/parent/pages/formFather'
 
 function AuthRoutes(): React.JSX.Element {
