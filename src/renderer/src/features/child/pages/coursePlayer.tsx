@@ -10,7 +10,7 @@ interface VideoPlayerScreenProps {
 }
 
 // Mock de datos de video para pruebas
-const MOCK_VIDEO_URL = 'https://download.samplelib.com/mp4/sample-5s.mp4'
+const MOCK_VIDEO_URL = '/../../../assets/images/prueba.mp4'
 const MOCK_COURSE_TITLE = 'Cepillado Correcto'
 
 // Componente principal de reproducción de video

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import BackButton from '@renderer/components/backButton'
 import Toothbrush from '@renderer/components/Toothbrush'
 import styles from '../styles/courseDetail.module.css'
+import { useNavigate, useParams } from 'react-router-dom'
 
 interface Lesson {
   id: number
@@ -12,19 +13,22 @@ interface Lesson {
 }
 
 const lessons: Lesson[] = [
-  { id: 1, title: 'Mi primer diente', available: true, position: 'right', color: '#FEA29B' },
-  { id: 2, title: 'Yaelito me tocó', available: true, position: 'left', color: '#FDE064' },
-  { id: 3, title: 'Erick dios', available: true, position: 'right', color: '#A8E6CF' },
-  { id: 4, title: 'Título de lección', available: true, position: 'left', color: '#D4A5FF' }
+  { id: 1, title: 'Leccion 1', available: true, position: 'right', color: '#FEA29B' },
+  { id: 2, title: 'Leccion 2', available: true, position: 'left', color: '#FDE064' },
+  { id: 3, title: 'Leccion 3', available: true, position: 'right', color: '#A8E6CF' },
+  { id: 4, title: 'Leccion final', available: true, position: 'left', color: '#D4A5FF' }
 ]
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function CourseDetail() {
+  // FIXME: No se porque da error selected lesson, revisar
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
+  const navigate = useNavigate()
+  const { courseId } = useParams<{ courseId: string }>() // obtener el ID del curso
 
   const handleLessonClick = (lesson: Lesson): void => {
     setSelectedLesson(lesson)
-    // aquí disparas tu lógica de reproducción de video
+    navigate(`/courses/course/${courseId}/lesson/${lesson.id}`)
   }
 
   return (

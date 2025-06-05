@@ -1,13 +1,12 @@
 import { FC } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from '../styles/courseCatalog.module.css'
 import CoursesIconActive from '@renderer/components/coursesIconeActive'
 import TeethIcon from '@renderer/components/teethIcon'
-// import avatarImage from './assets/avatar.png'
 
-// import { /**useLocation,**/ useNavigate } from 'react-router-dom';
 interface Course {
   id: number
-  title: string // Validación específica para title
+  title: string
   thumbnail: string
 }
 
@@ -16,56 +15,31 @@ interface CourseCardProps {
 }
 
 const Courses: FC = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate()
+
   const courses = {
     inProgress: [
       { id: 1, title: 'Cepillado correcto', thumbnail: './assets/course1.png' },
       { id: 2, title: 'Uso del hilo dental', thumbnail: './assets/course2.png' }
     ],
-    recommended: [
-      {
-        id: 3,
-        title: 'Alimentos saludables',
-        thumbnail: './assets/course3.png'
-      }
-    ],
+    recommended: [{ id: 3, title: 'Alimentos saludables', thumbnail: './assets/course3.png' }],
     all: [
-      {
-        id: 1,
-        title: 'Cepillado correcto',
-        thumbnail: './assets/course1.png'
-      },
-      {
-        id: 2,
-        title: 'Uso del hilo dental',
-        thumbnail: './assets/course2.png'
-      },
-      {
-        id: 3,
-        title: 'Alimentos saludables',
-        thumbnail: './assets/course3.png'
-      },
-      {
-        id: 4,
-        title: 'Visita al dentista',
-        thumbnail: './assets/course4.png'
-      },
-      {
-        id: 5,
-        title: 'Cuidado de brackets',
-        thumbnail: './assets/course5.png'
-      },
-      {
-        id: 6,
-        title: 'Mi primer diente',
-        thumbnail: './assets/course6.png'
-      }
+      { id: 1, title: 'Cepillado correcto', thumbnail: './assets/course1.png' },
+      { id: 2, title: 'Uso del hilo dental', thumbnail: './assets/course2.png' },
+      { id: 3, title: 'Alimentos saludables', thumbnail: './assets/course3.png' },
+      { id: 4, title: 'Visita al dentista', thumbnail: './assets/course4.png' },
+      { id: 5, title: 'Cuidado de brackets', thumbnail: './assets/course5.png' },
+      { id: 6, title: 'Mi primer diente', thumbnail: './assets/course6.png' }
     ]
   }
 
   const CourseCard: FC<CourseCardProps> = ({ course }) => {
+    const handleClick = (): void => {
+      navigate(`/courses/course/${course.id}`)
+    }
+
     return (
-      <div className={styles['course-card']}>
+      <div className={styles['course-card']} onClick={handleClick}>
         <div className={styles['thumbnail-container']}>
           <div className={styles['thumbnail']}>
             <div className={styles['play-button']}>
@@ -83,16 +57,12 @@ const Courses: FC = () => {
   return (
     <div className={styles['courses-container']}>
       {/* Header */}
-      <div>{/* Aqui el header con perfil, monedas y notificaciones*/}</div>
+      <div>{/* Aquí el header con perfil, monedas y notificaciones */}</div>
 
       <main className={styles['courses-main']}>
-        {/* Sección de búsqueda corregida */}
+        {/* Sección de búsqueda */}
         <div className={styles['search-box']}>
-          <input
-            type="text"
-            placeholder="Buscar cursos..."
-            className={styles['search-input']} // Clase corregida
-          />
+          <input type="text" placeholder="Buscar cursos..." className={styles['search-input']} />
           <button className={styles['search-button']}>{/* Icono */}</button>
         </div>
 
@@ -121,7 +91,7 @@ const Courses: FC = () => {
           <span>Cursos</span>
         </button>
         <button className={styles['nav-button']}>
-          {/** }onClick={() => navigate('/dientin')*/}
+          {/* Aquí tu ruta a Dientin */}
           <TeethIcon />
           <span>Dientin</span>
         </button>

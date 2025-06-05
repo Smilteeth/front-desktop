@@ -82,4 +82,3 @@ export const MenuButtons: React.FC<MenuButtonsProps> = () => {
     </div>
   )
 }
-

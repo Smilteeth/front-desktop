@@ -156,7 +156,7 @@ function AuthRoutes(): React.JSX.Element {
         }
       />
       <Route
-        path="/coursePlay" // - /:courseId
+        path="/courses/course/:courseId/lesson/:lessonId"
         element={
           <ProtectedRoute>
             <CoursePlayer />
@@ -164,7 +164,7 @@ function AuthRoutes(): React.JSX.Element {
         }
       />
       <Route
-        path="/courseDetail"
+        path="/courses/course/:courseId"
         element={
           <ProtectedRoute>
             <CourseDetail />
