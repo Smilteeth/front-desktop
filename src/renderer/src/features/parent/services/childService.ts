@@ -1,4 +1,4 @@
-import { ChildData, ChildResponse, CreateChildResult, UpdateChildData } from '../types/childTypes'
+import { ChildData, ChildResponse, CreateChildResult } from '../types/childTypes'
 import { validateName, validateLastName } from '@renderer/utils/validators'
 
 const API_BASE_URL = 'https://smiltheet-api.rafabeltrans17.workers.dev/api/child'
@@ -147,7 +147,7 @@ const validateAndTrimLastName = (lastName: string): string => {
   return lastName.trim()
 }
 
-const processUpdateFields = (childData: Partial<UpdateChildData>): Partial<UpdateChildData> => {
+const processUpdateFields = (childData: Partial<ChildData>): Partial<ChildData> => {
   const processedData = { ...childData }
 
   if (processedData.name !== undefined) {
@@ -220,37 +220,23 @@ export async function getChildByIdService(childId: number): Promise<ChildRespons
 
 export async function updateChildService(
   childId: number,
-  childData: UpdateChildData
-): Promise<{ message: string; updatedFields: string[] }> {
+  childData: Partial<ChildData>
+): Promise<{ message: string }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { childId: _, ...dataToSend } = childData
-    const processedData = processUpdateFields(dataToSend)
-
-    const requestBody = {
-      childId,
-      ...processedData
-    }
-
-    const response = await makeApiRequest(`${API_BASE_URL}/edit`, 'PUT', requestBody)
+    const processedData = processUpdateFields(childData)
+    const response = await makeApiRequest(`${API_BASE_URL}/${childId}`, 'PUT', processedData)
 
     if (!response.ok) {
       handleApiError(response, 'actualizar')
     }
 
     const data = await response.json()
-
-    const updatedFields =
-      data.updatedFields || Object.keys(processedData).filter((key) => key !== 'childId')
-
-    return {
-      message: data.message || 'Niño actualizado exitosamente',
-      updatedFields
-    }
+    console.log('Niño actualizado exitosamente:', data)
+    return data
   } catch (error) {
     console.error('Error en updateChildService:', error)
     throw error
   }
 }
 
-export type { ChildResponse, ChildData, UpdateChildData }
+export type { ChildResponse, ChildData }

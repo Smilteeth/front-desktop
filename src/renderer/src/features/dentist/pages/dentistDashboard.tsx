@@ -96,30 +96,8 @@ const DentistDashboard: React.FC = () => {
             )}
           </div>
         </div>
+        <NavBar />
       </div>
-
-      <nav className="bottom-nav">
-        <div className="nav-item active">
-          <HomeIcon />
-          <span>Inicio</span>
-        </div>
-        <div className="nav-item">
-          <ClockIcon />
-          <span>Citas</span>
-        </div>
-        <div className="nav-item">
-          <DocumentIcon />
-          <span>Pacientes</span>
-        </div>
-        <div className="nav-item">
-          <UserIcon />
-          <span>Perfil</span>
-        </div>
-        <div className="nav-item">
-          <SettingsIcon />
-          <span>Configuración</span>
-        </div>
-      </nav>
     </div>
   )
 }
