@@ -1,0 +1,149 @@
+.menuButtons {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #4FC3F7;
+  color: white;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
+  transition: all 0.3s ease;
+  min-width: 160px;
+}
+
+.menuBtn:hover {
+  background: #29B6F6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(79, 195, 247, 0.6);
+}
+
+.menuBtnIcon {
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.storeBtn:hover {
+  background: #26C6DA;
+}
+
+.customizeBtn:hover {
+  background: #AB47BC;
+}
+
+@media (max-width: 768px) {
+  .menuButtons {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .menuBtn {
+    min-width: 120px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+
+.modalContent {
+  position: absolute;
+  top: 50%;
+  left: 80px; /* distancia al botón activador, ajusta a tu gusto */
+  transform: translateY(-50%);
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: modalAppear 0.3s ease;
+
+  /* Ajustes clave */
+  width: fit-content;
+  min-width: 220px; /* un poco más que los botones azules */
+  margin: 0; /* elimina centrado automático para que quede junto al botón activador */
+}
+
+
+.modalContent h2 {
+  text-align: center;
+  margin-bottom: 50px;
+  color: #333;
+}
+
+.itemGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.itemCard {
+  background: linear-gradient(45deg, #4FC3F7, #29B6F6);
+  color: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.itemCard:hover {
+  transform: scale(1.05);
+}
+
+.closeBtn {
+  width: 100%;
+  background: #FF6B9D;
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  border-radius: 25px; /* igual que los botones azules */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
