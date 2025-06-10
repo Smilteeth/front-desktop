@@ -43,7 +43,7 @@
   font-weight: 700;
 }
 
-.subtitle {
+.header > p {
   font-size: var(--font-size-h3);
   color: var(--neutral-dark);
 }
@@ -81,13 +81,4 @@
   color: var(--primary-darker);
   margin-top: 1rem;
   text-align: center;
-}
-
-.loadingAppointments {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  font-size: var(--font-size-title1);
-  color: var(--neutral-normal);
 }
