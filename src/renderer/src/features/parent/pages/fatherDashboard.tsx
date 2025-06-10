@@ -36,7 +36,6 @@ interface ChildBrushingData {
   todayBrushing: BrushingStatus
   weeklyBrushing: DayBrushing[]
   todayRecords: BrushRecord[]
-  // Agregar mapeo de registros por tipo
   brushTypeMap: {
     morning: string[]
     afternoon: string[]
