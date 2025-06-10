@@ -83,7 +83,7 @@ const DentistDetail: React.FC = () => {
         <div className={styles.header}>
           <BackButton />
         </div>
-        <div className={styles.error}>ID de dentista no proporcionado.</div>
+        <div className={styles.error}>ID de dentista no proporcionado</div>
       </div>
     )
   }
