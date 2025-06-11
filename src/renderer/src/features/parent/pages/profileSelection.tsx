@@ -125,7 +125,7 @@ const ProfileSelection: FC = () => {
         })
       )
 
-      console.log('Perfil de hijo seleccionado:', profile)
+      navigate('/courses')
     }
   }
 
