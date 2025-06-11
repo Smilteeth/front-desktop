@@ -5,26 +5,27 @@ import Mail from '@renderer/assets/icons/mail.svg'
 import NavBar from '../components/navBar'
 import { getAppointmentsService } from '@renderer/features/parent/services/appointmentService'
 import { getDentistByIdService } from '@renderer/features/parent/services/dentistService'
-import { AppointmentResponse, DentistResponse } from '../types/dentistTypes'
+import { AppointmentResponse, DentistResponse, EditDentistCredentials } from '../types/dentistTypes'
+import EditDentistModal from '../components/editDentistModal'
+import { editDentistService } from '../services/editDentistService'
 
 const Profile: React.FC = () => {
-  const [appointmentsData, setAppointmentsData] = useState<AppointmentResponse[]>([])
+  const [, setAppointmentsData] = useState<AppointmentResponse[]>([])
   const [dentist, setDentist] = useState<DentistResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
         const appointments = await getAppointmentsService()
         setAppointmentsData(appointments)
-
-        // Obtener el dentistId del primer appointment o desde donde corresponda
         if (appointments.length > 0 && appointments[0].dentistId) {
           localStorage.setItem('dentistId', appointments[0].dentistId.toString())
 
           const dentistData = await getDentistByIdService(appointments[0].dentistId)
-          // Map DentistResponse to Dentist
           const dentistMapped: DentistResponse = {
             userId: dentistData.userId,
             name: dentistData.name,
@@ -55,6 +56,123 @@ const Profile: React.FC = () => {
 
   const handleEditProfile = (): void => {
     console.log('Editar perfil')
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditModalClose = (): void => {
+    if (isUpdating) return
+    setIsEditModalOpen(false)
+  }
+
+  const handleEditConfirm = async (updatedData: Partial<DentistResponse>): Promise<void> => {
+    if (!dentist) return
+
+    try {
+      setIsUpdating(true)
+
+      // Crear el objeto credentials solo con los campos que tienen valores válidos
+      const credentials: Partial<EditDentistCredentials> = {}
+
+      // Solo agregar campos que tienen valores válidos (no null, undefined o string vacío)
+      if (
+        updatedData.university !== undefined &&
+        updatedData.university !== null &&
+        updatedData.university.trim() !== ''
+      ) {
+        credentials.university = updatedData.university.trim()
+      }
+
+      if (
+        updatedData.speciality !== undefined &&
+        updatedData.speciality !== null &&
+        updatedData.speciality.trim() !== ''
+      ) {
+        credentials.speciality = updatedData.speciality.trim()
+      }
+
+      if (
+        updatedData.about !== undefined &&
+        updatedData.about !== null &&
+        updatedData.about.trim() !== ''
+      ) {
+        credentials.about = updatedData.about.trim()
+      }
+
+      if (
+        updatedData.serviceStartTime !== undefined &&
+        updatedData.serviceStartTime !== null &&
+        updatedData.serviceStartTime !== ''
+      ) {
+        credentials.serviceStartTime = updatedData.serviceStartTime
+      }
+
+      if (
+        updatedData.serviceEndTime !== undefined &&
+        updatedData.serviceEndTime !== null &&
+        updatedData.serviceEndTime !== ''
+      ) {
+        credentials.serviceEndTime = updatedData.serviceEndTime
+      }
+
+      if (
+        updatedData.phoneNumber !== undefined &&
+        updatedData.phoneNumber !== null &&
+        updatedData.phoneNumber.trim() !== ''
+      ) {
+        credentials.phoneNumber = updatedData.phoneNumber.trim()
+      }
+
+      if (updatedData.latitude !== undefined && updatedData.latitude !== null) {
+        credentials.latitude = updatedData.latitude
+      }
+
+      if (updatedData.longitude !== undefined && updatedData.longitude !== null) {
+        credentials.longitude = updatedData.longitude
+      }
+
+      // Verificar que hay al menos un campo para actualizar
+      if (Object.keys(credentials).length === 0) {
+        console.log('No hay cambios válidos para enviar')
+        return
+      }
+
+      console.log('Enviando credenciales:', credentials)
+      await editDentistService(credentials as EditDentistCredentials)
+
+      // Actualizar el estado local con los datos que se enviaron exitosamente
+      const updatedDentist = { ...dentist }
+
+      if (credentials.university) updatedDentist.university = credentials.university
+      if (credentials.speciality) updatedDentist.speciality = credentials.speciality
+      if (credentials.about) updatedDentist.about = credentials.about
+      if (credentials.serviceStartTime)
+        updatedDentist.serviceStartTime = credentials.serviceStartTime
+      if (credentials.serviceEndTime) updatedDentist.serviceEndTime = credentials.serviceEndTime
+      if (credentials.phoneNumber) updatedDentist.phoneNumber = credentials.phoneNumber
+      if (credentials.latitude) updatedDentist.latitude = credentials.latitude
+      if (credentials.longitude) updatedDentist.longitude = credentials.longitude
+
+      setDentist(updatedDentist)
+      console.log('Perfil actualizado exitosamente')
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error)
+
+      let errorMessage = 'Error al actualizar el perfil'
+
+      if (error instanceof Error) {
+        if (error.message.includes('400')) {
+          errorMessage = 'Los datos enviados no son válidos. Verifica la información.'
+        } else if (error.message.includes('409')) {
+          errorMessage = 'Los datos ingresados ya están en uso por otro dentista.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+
+      alert(errorMessage)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const formatPhoneNumber = (phone: string): string => {
@@ -172,6 +290,15 @@ const Profile: React.FC = () => {
         </div>
         <NavBar />
       </div>
+
+      {/* Modal de edición de perfil */}
+      <EditDentistModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        onConfirm={handleEditConfirm}
+        isLoading={isUpdating}
+        dentistData={dentist}
+      />
     </div>
   )
 }

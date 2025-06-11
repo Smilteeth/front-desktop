@@ -106,3 +106,18 @@ export interface GetPatientsResponse {
   dentist: string
   father: string
 }
+
+export interface EditDentistCredentials {
+  university?: string | null | undefined
+  speciality?: string | null | undefined
+  about?: string | null | undefined
+  serviceStartTime?: string | null | undefined
+  serviceEndTime?: string | null | undefined
+  phoneNumber?: string | null | undefined
+  latitude?: number | null | undefined
+  longitude?: number | null | undefined
+}
+
+export interface EditDentistResponse {
+  message: string
+}

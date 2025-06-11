@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createDentistService } from '../services/createDentistService'
 import { CreateDentistCredentials, CreateDentistResponse } from '../types/dentistTypes'
@@ -9,14 +9,14 @@ import {
   validateAbout,
   validateServiceStartTime,
   validateServiceEndTime,
-  validateAddress,
   validatePhoneNumber
 } from '@renderer/utils/validators'
-import { geocodeAddress } from '@renderer/utils/location/geocoding'
+import { reverseGeocode } from '@renderer/features/dentist/utils/reverseGeocode'
 import BackButton from '@renderer/components/backButton'
 import InputForm from '@renderer/components/inputForm'
 import TextareaInput from '@renderer/components/textareaInput'
 import Button from '@renderer/components/button'
+import MapSelector from '@renderer/components/mapSelector'
 import updateImage from '@renderer/assets/icons/updateImage.svg'
 import styles from '../styles/formDentist.module.css'
 
@@ -27,7 +27,9 @@ const FormDentist = (): React.JSX.Element => {
   const [about, setAbout] = useState('')
   const [ServicestartTime, setServiceStartTime] = useState('')
   const [ServiceEndTime, setServiceEndTime] = useState('')
-  const [address, setAddress] = useState('')
+  const [latitude, setLatitude] = useState<string>('')
+  const [longitude, setLongitude] = useState<string>('')
+  const [address, setAddress] = useState<string | null>(null)
   const [phoneNumber, setPhoneNumber] = useState('')
   const [errors, setErrors] = useState<{
     profesionalLicense?: string
@@ -36,12 +38,22 @@ const FormDentist = (): React.JSX.Element => {
     about?: string
     serviceStartTime?: string
     serviceEndTime?: string
-    address?: string
+    latitude?: string
+    longitude?: string
     phoneNumber?: string
   }>({})
   const [createDentistError, setCreateDentistError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
+  // Memorizar la función de cambio de ubicación para evitar re-renders
+  const handleLocationChange = useCallback(async (lat: number, lng: number) => {
+    setLatitude(lat.toString())
+    setLongitude(lng.toString())
+
+    const resolvedAddress = await reverseGeocode(lat, lng)
+    setAddress(resolvedAddress)
+  }, [])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
@@ -52,12 +64,31 @@ const FormDentist = (): React.JSX.Element => {
     const profesionalLicenseError = validateProfessionalLicense(profesionalLicense)
     const ServiceStartTimeError = validateServiceStartTime(ServicestartTime)
     const ServiceEndTimeError = validateServiceEndTime(ServiceEndTime)
-    const addressError = validateAddress(address)
     const phoneNumberError = validatePhoneNumber(phoneNumber)
 
     const universityError = university.trim() !== '' ? validateUniversity(university) : null
     const specialityError = speciality.trim() !== '' ? validateSpeciality(speciality) : null
     const aboutError = about.trim() !== '' ? validateAbout(about) : null
+
+    // Validar coordenadas
+    let latitudeError: string | null = null
+    let longitudeError: string | null = null
+
+    if (!latitude.trim() || !longitude.trim()) {
+      latitudeError = 'Debe seleccionar una ubicación en el mapa'
+      longitudeError = 'Debe seleccionar una ubicación en el mapa'
+    } else {
+      const lat = parseFloat(latitude)
+      const lng = parseFloat(longitude)
+
+      if (isNaN(lat) || lat < -90 || lat > 90) {
+        latitudeError = 'La latitud debe estar entre -90 y 90'
+      }
+
+      if (isNaN(lng) || lng < -180 || lng > 180) {
+        longitudeError = 'La longitud debe estar entre -180 y 180'
+      }
+    }
 
     if (
       profesionalLicenseError ||
@@ -66,7 +97,8 @@ const FormDentist = (): React.JSX.Element => {
       aboutError ||
       ServiceStartTimeError ||
       ServiceEndTimeError ||
-      addressError ||
+      latitudeError ||
+      longitudeError ||
       phoneNumberError
     ) {
       setErrors({
@@ -76,37 +108,22 @@ const FormDentist = (): React.JSX.Element => {
         about: aboutError || undefined,
         serviceStartTime: ServiceStartTimeError || undefined,
         serviceEndTime: ServiceEndTimeError || undefined,
-        address: addressError || undefined,
+        latitude: latitudeError || undefined,
+        longitude: longitudeError || undefined,
         phoneNumber: phoneNumberError || undefined
       })
       setIsLoading(false)
       return
     }
 
-    let latitude = 0
-    let longitude = 0
-
-    try {
-      const geoResult = await geocodeAddress(address)
-      latitude = geoResult.lat
-      longitude = geoResult.lon
-    } catch (error) {
-      console.error('Error al geocodificar la dirección:', error)
-      setCreateDentistError(
-        'Error al geocodificar la dirección, verifica que sea correcta y completa'
-      )
-      setIsLoading(false)
-      return
-    }
-
-    // Now create the credentials with the newly obtained coordinates
+    // Crear las credenciales con las coordenadas obtenidas del mapa
     const credentials: CreateDentistCredentials = {
       professionalLicense: profesionalLicense,
       serviceStartTime: ServicestartTime,
       serviceEndTime: ServiceEndTime,
       phoneNumber: phoneNumber,
-      latitude: latitude,
-      longitude: longitude
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude)
     }
 
     if (university.trim() !== '') {
@@ -132,6 +149,10 @@ const FormDentist = (): React.JSX.Element => {
       setIsLoading(false)
     }
   }
+
+  // Memorizar los valores del mapa para evitar re-renders innecesarios
+  const mapLatitude = latitude ? parseFloat(latitude) : 18.143036
+  const mapLongitude = longitude ? parseFloat(longitude) : -94.476026
 
   return (
     <div className={styles.container}>
@@ -224,17 +245,6 @@ const FormDentist = (): React.JSX.Element => {
           </div>
 
           <InputForm
-            label="Dirección del consultorio"
-            name="address"
-            type="text"
-            value={address}
-            placeholder="Dirección del consultorio"
-            onChange={(e) => setAddress(e.target.value)}
-            required={true}
-          />
-          {errors.address && <div className={styles.errorMessage}>{errors.address}</div>}
-
-          <InputForm
             label="Número telefónico"
             name="phone"
             type="tel"
@@ -244,6 +254,21 @@ const FormDentist = (): React.JSX.Element => {
             required={true}
           />
           {errors.phoneNumber && <div className={styles.errorMessage}>{errors.phoneNumber}</div>}
+
+          <div className={styles.formGroup}>
+            <div className={styles.addressGroup}>
+              <p>Ubicación del consultorio: </p>
+              <p>{address || 'Selecciona la ubicación de tu consultorio en el mapa'}</p>
+            </div>
+            <MapSelector
+              latitude={mapLatitude}
+              longitude={mapLongitude}
+              onLocationChange={handleLocationChange}
+            />
+            {(errors.latitude || errors.longitude) && (
+              <div className={styles.errorMessage}>{errors.latitude || errors.longitude}</div>
+            )}
+          </div>
         </fieldset>
 
         <div className={styles.buttonContainer}>

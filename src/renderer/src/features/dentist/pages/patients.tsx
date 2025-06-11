@@ -28,6 +28,17 @@ const Patients: React.FC = () => {
     fetchPatients()
   }, [])
 
+  const processedPatients = patients.map((patient) => {
+    const trimmedChildName =
+      patient.name.length + patient.lastName.length > 10
+        ? `${patient.name.slice(0, 5)} ${patient.lastName.slice(0, 5)}`
+        : `${patient.name} ${patient.lastName}`
+    return {
+      ...patient,
+      childName: trimmedChildName
+    }
+  })
+
   if (loading) {
     return (
       <div className={styles.pageWrapper}>
@@ -64,14 +75,14 @@ const Patients: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.mainContent}>
           <h1 className={styles.pageTitle}>Pacientes bajo su cuidado</h1>
-          {patients.length === 0 ? (
+          {processedPatients.length === 0 ? (
             <div className={styles.emptyMessage}>No hay pacientes registrados</div>
           ) : (
             <div className={styles.patientsList}>
-              {patients.map((patient) => (
+              {processedPatients.map((patient) => (
                 <PatientsCard
                   key={patient.childId}
-                  name={`${patient.name} ${patient.lastName}`}
+                  name={patient.childName}
                   birthDate={patient.birthDate}
                 />
               ))}

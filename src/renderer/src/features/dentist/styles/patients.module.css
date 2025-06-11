@@ -40,3 +40,13 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+.loadingMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: var(--font-size-title1);
+  color: var(--neutral-normal);
+  font-family: var(--Quicksand);
+}

@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@types/react-router-dom": "^5.3.3",
     "electron-updater": "^6.3.9",
+    "leaflet": "^1.9.4",
     "react-router-dom": "^7.5.3"
   },
   "devDependencies": {
