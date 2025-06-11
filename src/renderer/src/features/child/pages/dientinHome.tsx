@@ -1,27 +1,47 @@
 import CoursesIcon from '../components/coursesIcon'
 import styles from '../styles/dientinMenu.module.css'
-import React from 'react'
 import TeethIconActive from '../components/teethIconActive'
-import { Header } from '../components/childHeader'
 import { MenuButtons } from '../components/teethStoreButton'
-import { useNavigate } from 'react-router-dom'
 import { ToothCharacter } from '../components/mascotaDientin'
+import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Header } from '../components/childHeader'
+import { courseService } from '../services/apiService'
 
-// import { openNotifications } from '@renderer/utils/notifications';
-// import { useNavigate } from 'react-router-dom';
-
-export default function DentistScreen(): React.JSX.Element {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export default function DientinHome(): React.JSX.Element {
   const navigate = useNavigate()
-  const handleToothClick = (): void => {
-    console.log('¡Diente clickeado!')
-    // Aquí puedes agregar lógica adicional
-  }
+  const [childName, setChildName] = useState('Cargando...')
+  const [coins, setCoins] = useState(0)
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const fetchChildData = async () => {
+      try {
+        const childIdStr = localStorage.getItem('childId')
+        if (!childIdStr) {
+          throw new Error('childId no encontrado en localStorage')
+        }
+
+        const childId = parseInt(childIdStr)
+        const name = await courseService.getChildName(childId)
+        const totalCoins = await courseService.getChildCoins(childId)
+
+        setChildName(name)
+        setCoins(totalCoins)
+      } catch (error) {
+        console.error('Error al obtener datos del niño:', error)
+      }
+    }
+
+    fetchChildData()
+  }, [])
 
   return (
     <div className={styles['dientin-body']}>
       <Header
-        childName="María"
-        coins={1500}
+        childName={childName}
+        coins={coins}
         profileAvatar="👧"
         // onNotificationClick={() => openNotifications()}
       />
@@ -31,7 +51,7 @@ export default function DentistScreen(): React.JSX.Element {
           onCustomizeClick={() => navigate('/customize')}
         />
         <div className={styles['tooth-character-container']}>
-          <ToothCharacter onClick={handleToothClick} />
+          <ToothCharacter />
         </div>
       </main>
 

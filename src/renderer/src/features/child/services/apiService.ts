@@ -1,4 +1,8 @@
-// apiService.ts - Servicio centralizado para manejar llamadas a la API
+/**
+ * API Service for Courses and Lessons
+ *    Aqui se maneja las llamadas a la api
+ */
+
 // Interfaces
 export interface Lesson {
   lessonId: number
@@ -30,18 +34,19 @@ export interface CoursesApiResponse {
   items: Course[]
 }
 
-// interfaz para las preguntas
-interface Question {
+// Interfaz para preguntas
+export interface Question {
   questionId: number
-  questionText: string
-  options: string[]
-  correctAnswer: string
+  question: string
+  answers: {
+    questionId: number
+    answer: string
+    isCorrect: boolean
+  }[]
 }
 
-
 // Configuración base de la API
-const API_BASE_URL = 'https://smiltheet-api.rafabeltrans17.workers.dev/api' // Ajusta según tu configuración
-
+const API_BASE_URL = 'https://smiltheet-api.rafabeltrans17.workers.dev/api'
 
 // Función helper para manejar respuestas de la API
 const handleApiResponse = async <T>(response: Response): Promise<T> => {
@@ -57,12 +62,12 @@ const handleApiResponse = async <T>(response: Response): Promise<T> => {
 // Función helper para realizar peticiones con manejo de errores
 const apiRequest = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
   try {
-    const authToken = localStorage.getItem('authToken') // obtener token
+    const authToken = localStorage.getItem('authToken')
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}), // agregar la cabecera
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...options?.headers
       },
       ...options
@@ -75,26 +80,21 @@ const apiRequest = async <T>(endpoint: string, options?: RequestInit): Promise<T
   }
 }
 
-
 // Servicio de API para cursos
 export const courseService = {
-  // Obtener todos los cursos
   getAllCourses: async (page: number = 1, limit: number = 10): Promise<CoursesApiResponse> => {
     return apiRequest<CoursesApiResponse>(`/course?page=${page}&limit=${limit}`)
   },
 
-  // Obtener un curso específico con sus lecciones
   getCourseById: async (courseId: number): Promise<CourseWithLessons> => {
     return apiRequest<CourseWithLessons>(`/course/${courseId}`)
   },
 
-  // Obtener solo los cursos activos
   getActiveCourses: async (page: number = 1, limit: number = 10): Promise<Course[]> => {
     const response = await courseService.getAllCourses(page, limit)
     return response.items.filter(course => course.isActive)
   },
 
-  // Buscar cursos por término
   searchCourses: async (searchTerm: string, page: number = 1, limit: number = 10): Promise<Course[]> => {
     const courses = await courseService.getActiveCourses(page, limit)
     return courses.filter(course =>
@@ -103,19 +103,16 @@ export const courseService = {
     )
   },
 
-  // Obtener una lección específica
   getLessonById: async (courseId: number, lessonId: number): Promise<Lesson | null> => {
     const course = await courseService.getCourseById(courseId)
     return course.lessons.find(lesson => lesson.lessonId === lessonId && lesson.isActive) || null
   },
 
-  // Obtener lecciones activas de un curso
   getActiveLessons: async (courseId: number): Promise<Lesson[]> => {
     const course = await courseService.getCourseById(courseId)
     return course.lessons.filter(lesson => lesson.isActive)
   },
 
-  // Validar si un curso existe y está activo
   validateCourse: async (courseId: number): Promise<boolean> => {
     try {
       const course = await courseService.getCourseById(courseId)
@@ -125,7 +122,6 @@ export const courseService = {
     }
   },
 
-  // Validar si una lección existe y está activa
   validateLesson: async (courseId: number, lessonId: number): Promise<boolean> => {
     try {
       const lesson = await courseService.getLessonById(courseId, lessonId)
@@ -133,12 +129,36 @@ export const courseService = {
     } catch {
       return false
     }
+  },
+
+  // Obtener preguntas para una lección
+  getQuestionsForLesson: async (lessonId: number): Promise<Question[]> => {
+    return apiRequest<Question[]>(`/course/question/${lessonId}`)
+  },
+
+  // Obtener nombre del niño
+  getChildName: async (childId: number): Promise<string> => {
+    const response = await apiRequest<{ name: string }>(`/child/id/${childId}`)
+    return response.name
+  },
+
+  // Obtener monedas del niño
+  getChildCoins: async (childId: number): Promise<number> => {
+    const response = await apiRequest<{ correctAnswers: number }>(`/transaction/${childId}`)
+    return response.correctAnswers
+  },
+
+  // Enviar respuestas correctas (transacción)
+  submitCorrectAnswers: async (childId: number, amount: number): Promise<void> => {
+    await apiRequest(`/transaction`, {
+      method: 'POST',
+      body: JSON.stringify({ childId, amount })
+    })
   }
 }
 
-// Servicio para manejar errores de manera consistente
+// Servicio para manejo de errores
 export const errorHandler = {
-  // Mensajes de error amigables para el usuario
   getErrorMessage: (error: unknown): string => {
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -155,16 +175,15 @@ export const errorHandler = {
     return 'Ha ocurrido un error inesperado'
   },
 
-  // Log de errores para debugging
   logError: (context: string, error: unknown): void => {
     console.error(`Error in ${context}:`, error)
   }
 }
 
-// Servicio para manejar preguntas del cuestionario
+// Servicio para preguntas (opcional)
 export const quizService = {
   getQuestionsForLesson: async (lessonId: number): Promise<Question[]> => {
-    const response = await apiRequest<{ questions: Question[] }>(`/lesson/${lessonId}/questions`)
-    return response.questions
+    return courseService.getQuestionsForLesson(lessonId)
   }
 }
+

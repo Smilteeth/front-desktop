@@ -17,8 +17,9 @@ const Courses: FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [searchLoading, setSearchLoading] = useState<boolean>(false)
+  const [childName, setChildName] = useState('Cargando...')
+  const [coins, setCoins] = useState(0)
 
-  // Función para obtener cursos de la API
   const fetchCourses = async (): Promise<void> => {
     try {
       setLoading(true)
@@ -34,7 +35,6 @@ const Courses: FC = () => {
     }
   }
 
-  // Función para buscar cursos
   const searchCourses = async (term: string): Promise<void> => {
     if (!term.trim()) {
       await fetchCourses()
@@ -54,12 +54,29 @@ const Courses: FC = () => {
     }
   }
 
-  // Cargar cursos al montar el componente
   useEffect(() => {
     fetchCourses()
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const fetchChildData = async () => {
+      try {
+        const childIdStr = localStorage.getItem('childId')
+        if (!childIdStr) throw new Error('childId no encontrado')
+        const childId = parseInt(childIdStr)
+        const [name, totalCoins] = await Promise.all([
+          courseService.getChildName(childId),
+          courseService.getChildCoins(childId)
+        ])
+        setChildName(name)
+        setCoins(totalCoins)
+      } catch (error) {
+        console.error('Error obteniendo datos del niño:', error)
+      }
+    }
+
+    fetchChildData()
   }, [])
 
-  // Debounce para la búsqueda
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       searchCourses(searchTerm)
@@ -68,7 +85,6 @@ const Courses: FC = () => {
     return () => clearTimeout(timeoutId)
   }, [searchTerm])
 
-  // Separar cursos recomendados (ejemplo: los más recientes)
   const recommendedCourses = courses.slice(0, 2)
   const allCourses = courses
 
@@ -78,9 +94,7 @@ const Courses: FC = () => {
     const handleClick = async (): Promise<void> => {
       try {
         setCardLoading(true)
-        // Validar que el curso esté disponible antes de navegar
         const isValid = await courseService.validateCourse(course.courseId)
-
         if (isValid) {
           navigate(`/courses/course/${course.courseId}`)
         } else {
@@ -158,20 +172,12 @@ const Courses: FC = () => {
 
   return (
     <div className={styles['courses-container']}>
-      {/* Header */}
-      <Header
-        childName="María"
-        coins={1500}
-        profileAvatar="👧"
-        // onNotificationClick={() => openNotifications()}
-      />
+      <Header childName={childName} coins={coins} profileAvatar="👧" />
       <div className={styles.header}>
         <h1>Mis Cursos</h1>
-        {/* Aquí el header con perfil, monedas y notificaciones */}
       </div>
 
       <main className={styles['courses-main']}>
-        {/* Sección de búsqueda */}
         <div className={styles['search-box']}>
           <input
             type="text"
@@ -195,7 +201,6 @@ const Courses: FC = () => {
           </div>
         </div>
 
-        {/* Sección de cursos recomendados */}
         {recommendedCourses.length > 0 && !searchTerm && (
           <section className={styles['recommended-courses']}>
             <h2 className={styles['section-title']}>Recomendados por el odontólogo</h2>
@@ -207,7 +212,6 @@ const Courses: FC = () => {
           </section>
         )}
 
-        {/* Sección de todos los cursos */}
         <section className={styles['all-courses']}>
           <h2 className={styles['section-title']}>
             {searchTerm ? `Resultados para "${searchTerm}"` : 'Todos los cursos'}

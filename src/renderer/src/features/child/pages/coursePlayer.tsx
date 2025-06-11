@@ -4,7 +4,6 @@ import BackButton from '@renderer/components/backButton'
 import { useParams, useNavigate } from 'react-router-dom'
 import { courseService } from '../services/apiService'
 
-// Interfaces para la API
 interface Lesson {
   lessonId: number
   courseId: number
@@ -25,38 +24,26 @@ interface CourseWithLessons {
   lessons: Lesson[]
 }
 
-interface VideoPlayerScreenProps {
-  videoUrl?: string
-  courseTitle?: string
-  lessonTitle?: string
-  onBack?: () => void
-}
-
-// Componente principal de reproducción de video
-const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
-  // Referencias a elementos DOM
+const CoursePlayer: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const progressBarRef = useRef<HTMLDivElement>(null)
+  const controlsTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Estados para controlar la UI y comportamiento
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
-  const [progress, setProgress] = useState<number>(0)
-  const [showControls, setShowControls] = useState<boolean>(true)
-  const [duration, setDuration] = useState<number>(0)
-  const [currentTime, setCurrentTime] = useState<number>(0)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [showControls, setShowControls] = useState(true)
+  const [duration, setDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [loading, setLoading] = useState(true)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string | null>(null)
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
   const [course, setCourse] = useState<CourseWithLessons | null>(null)
+  const [hasQuestions, setHasQuestions] = useState(false)
 
-  // Parámetros de la URL
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>()
   const navigate = useNavigate()
 
-  // Referencia para el temporizador de ocultar controles
-  const controlsTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Función para obtener los datos del curso y la lección
   const fetchLessonData = async (): Promise<void> => {
     if (!courseId || !lessonId) {
       setError('Parámetros de URL inválidos')
@@ -67,18 +54,10 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
     try {
       setLoading(true)
       const courseData = await courseService.getCourseById(Number(courseId))
+      if (!courseData.isActive) throw new Error('Este curso no está disponible')
 
-      if (!courseData.isActive) {
-        throw new Error('Este curso no está disponible')
-      }
-
-      const lesson = courseData.lessons.find(
-        (l) => l.lessonId === Number(lessonId) && l.isActive
-      )
-
-      if (!lesson) {
-        throw new Error('Lección no encontrada o no disponible')
-      }
+      const lesson = courseData.lessons.find(l => l.lessonId === Number(lessonId) && l.isActive)
+      if (!lesson) throw new Error('Lección no encontrada o no disponible')
 
       setCourse(courseData)
       setCurrentLesson(lesson)
@@ -90,189 +69,112 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
     }
   }
 
-
-  // Cargar datos de la lección al montar el componente
   useEffect(() => {
     fetchLessonData()
   }, [courseId, lessonId])
 
-  // Maneja la reproducción y pausa del video
-  const togglePlayPause = (): void => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play().catch((error) => {
-          console.error('Error al reproducir el video:', error)
-          // Muestra un mensaje amigable para niños en caso de error
-          alert('¡Ups! No pudimos reproducir el video. ¡Inténtalo otra vez!')
-        })
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const checkQuestions = async () => {
+      try {
+        const questions = await courseService.getQuestionsForLesson(Number(lessonId))
+        setHasQuestions(questions.length > 0)
+      } catch {
+        setHasQuestions(false)
       }
-      setIsPlaying(!isPlaying)
     }
-  }
+    if (lessonId) checkQuestions()
+  }, [lessonId])
 
-// Función modificada para manejar el final del video
   const updateProgressBar = useCallback(() => {
     const video = videoRef.current
     if (!video) return
 
     const { currentTime: ct, duration: dur = 1 } = video
-    const percent = (ct / dur) * 100
-
-    setProgress(percent)
+    setProgress((ct / dur) * 100)
     setCurrentTime(ct)
 
     if (ct >= dur - 0.1) {
-      // Mostrar confirmación antes de redirigir al cuestionario
-      const userConfirmed = window.confirm(
-        '¡Felicidades! Has completado la lección.\n\nAhora debes responder el cuestionario para continuar.\n\n¿Listo para comenzar?'
-      )
-
-      if (userConfirmed) {
-        // Redirigir al cuestionario de la lección actual
-        navigate(`/courses/course/${courseId}/lesson/${lessonId}/quiz`)
+      if (hasQuestions) {
+        const confirmQuiz = window.confirm(
+          'Has completado la lección. Para avanzar, debes responder un pequeño cuestionario. ¿Deseas comenzar ahora?'
+        )
+        if (confirmQuiz) navigate(`/courses/course/${courseId}/lesson/${lessonId}/quiz`)
+        else {
+          video.currentTime = 0
+          setIsPlaying(false)
+        }
       } else {
-        // Si el usuario cancela, reiniciar el video al inicio
-        video.currentTime = 0
-        setIsPlaying(false)
+        alert('Lección completada')
+        navigateToNextLesson()
       }
     }
-  }, [courseId, lessonId, navigate])
+  }, [courseId, lessonId, navigate, hasQuestions, course, currentLesson])
 
-  // Función modificada para navegar a la siguiente lección
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const navigateToNextLesson = (): void => {
     if (!course || !currentLesson) return
-
     const currentIndex = course.lessons.findIndex(l => l.lessonId === currentLesson.lessonId)
     if (currentIndex < course.lessons.length - 1) {
       const nextLesson = course.lessons[currentIndex + 1]
-      // Mostrar confirmación antes de redirigir
-      const userConfirmed = window.confirm(
-        '¡Lección completada!\n\n¿Deseas continuar con la siguiente lección?'
-      )
-
-      if (userConfirmed) {
-        navigate(`/courses/course/${courseId}/lesson/${nextLesson.lessonId}`)
-      }
+      const confirmNext = window.confirm('Has completado esta lección. ¿Deseas continuar con la siguiente?')
+      if (confirmNext) navigate(`/courses/course/${courseId}/lesson/${nextLesson.lessonId}`)
     } else {
-      // Mostrar confirmación para el final del curso
-      const userConfirmed = window.confirm(
-        '¡Felicidades! Has completado todo el curso.\n\n¿Deseas volver al inicio del curso?'
-      )
-
-      if (userConfirmed) {
-        navigate(`/courses/course/${courseId}`)
-      }
+      const confirmEnd = window.confirm('Has completado todas las lecciones. ¿Deseas volver al inicio del curso?')
+      if (confirmEnd) navigate(`/courses/course/${courseId}`)
     }
   }
 
-  // Maneja el clic en la barra de progreso para saltar a diferentes partes del video
-  // const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>): void => {
-  //   if (videoRef.current && progressBarRef.current) {
-  //     const rect = progressBarRef.current.getBoundingClientRect()
-  //     const clickPosition = e.clientX - rect.left
-  //     const barWidth = rect.width
-  //     const seekPercent = clickPosition / barWidth
-  //     videoRef.current.currentTime = seekPercent * videoRef.current.duration
-  //   }
-  // }
-
-  // Formatea el tiempo en formato MM:SS
-  const formatTime = (timeInSeconds: number): string => {
-    const minutes = Math.floor(timeInSeconds / 60)
-    const seconds = Math.floor(timeInSeconds % 60)
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  const togglePlayPause = (): void => {
+    const video = videoRef.current
+    if (!video) return
+    if (isPlaying) video.pause()
+    else video.play().catch(() => alert('Error al reproducir el video'))
+    setIsPlaying(!isPlaying)
   }
 
-  // Muestra/oculta los controles automáticamente
+  const formatTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60)
+    const s = Math.floor(seconds % 60)
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
   const resetControlsTimer = useCallback(() => {
-    if (controlsTimerRef.current) {
-      clearTimeout(controlsTimerRef.current)
-    }
-
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current)
     setShowControls(true)
-
-    // Oculta los controles después de 3 segundos de inactividad
-    if (isPlaying) {
-      controlsTimerRef.current = setTimeout(() => {
-        setShowControls(false)
-      }, 3000)
-    }
+    if (isPlaying) controlsTimerRef.current = setTimeout(() => setShowControls(false), 3000)
   }, [isPlaying])
 
-  // Configuración de eventos cuando el componente se monta
   useEffect(() => {
     const video = videoRef.current
-
-    const handleLoadedMetadata = (): void => {
-      if (video) setDuration(video.duration)
-    }
-
     if (!video) return
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const handleLoadedMetadata = () => setDuration(video.duration)
 
-    // Eventos del video
     video.addEventListener('timeupdate', updateProgressBar)
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
     video.addEventListener('play', () => setIsPlaying(true))
     video.addEventListener('pause', () => setIsPlaying(false))
     video.addEventListener('ended', () => setIsPlaying(false))
 
-    // Limpieza de eventos cuando el componente se desmonta
     return () => {
-      if (video) {
-        video.removeEventListener('timeupdate', updateProgressBar)
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata)
-        video.removeEventListener('play', () => setIsPlaying(true))
-        video.removeEventListener('pause', () => setIsPlaying(false))
-        video.removeEventListener('ended', () => setIsPlaying(false))
-      }
-
-      if (controlsTimerRef.current) {
-        clearTimeout(controlsTimerRef.current)
-      }
+      video.removeEventListener('timeupdate', updateProgressBar)
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      video.removeEventListener('play', () => setIsPlaying(true))
+      video.removeEventListener('pause', () => setIsPlaying(false))
+      video.removeEventListener('ended', () => setIsPlaying(false))
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current)
     }
-  }, [updateProgressBar, currentLesson])
+  }, [updateProgressBar])
 
-  // Reinicia el temporizador de controles cuando cambia el estado de reproducción
   useEffect(() => {
     resetControlsTimer()
   }, [resetControlsTimer])
 
-  if (loading) {
+  if (loading || !currentLesson || !course) {
     return (
       <div className={styles['video-player-container']}>
-        <div className={styles['loading-container']}>
-          <BackButton />
-          <p>Cargando lección...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className={styles['video-player-container']}>
-        <div className={styles['error-container']}>
-          <BackButton />
-          <h2>¡Oops!</h2>
-          <p>{error}</p>
-          <button onClick={fetchLessonData} className={styles['retry-button']}>
-            Reintentar
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!currentLesson || !course) {
-    return (
-      <div className={styles['video-player-container']}>
-        <div className={styles['error-container']}>
-          <BackButton />
-          <p>Lección no encontrada</p>
-        </div>
+        <BackButton />
+        <p>{loading ? 'Cargando lección...' : 'Lección no encontrada'}</p>
       </div>
     )
   }
@@ -283,7 +185,6 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
       onMouseMove={resetControlsTimer}
       onClick={resetControlsTimer}
     >
-      {/* ─── Encabezado ───────────────────────────── */}
       <div className={`${styles.header} ${showControls ? styles.visible : styles.hidden}`}>
         <BackButton />
         <div className={styles['title-container']}>
@@ -292,12 +193,11 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
         </div>
       </div>
 
-      {/* ─── Video ───────────────────────────────── */}
       <div className={styles['video-wrapper']}>
         <video
           ref={videoRef}
           className={styles['video-element']}
-          src= {currentLesson.contentUrl}
+          src={currentLesson.contentUrl}
           onClick={togglePlayPause}
           playsInline
           crossOrigin="anonymous"
@@ -312,32 +212,24 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
         )}
       </div>
 
-      {/* ─── Controles inferiores ─────────────────── */}
       <div className={`${styles.controls} ${showControls ? styles.visible : styles.hidden}`}>
-        {/* Tiempo */}
         <div className={styles['time-display']}>
           <span>{formatTime(currentTime)}</span>
           <span> / </span>
           <span>{formatTime(duration)}</span>
         </div>
 
-        {/* Barra de progreso */}
-        <div
-          className={styles['progress-bar']}
-          ref={progressBarRef}
-          // onClick={handleProgressBarClick}
-        >
+        <div className={styles['progress-bar']} ref={progressBarRef}>
           <div className={styles['progress-filled']} style={{ width: `${progress}%` }} />
         </div>
 
-        {/* Información de la lección */}
         <div className={styles['lesson-info']}>
           <span className={styles['lesson-number']}>
-            {course.lessons.findIndex(l => l.lessonId === currentLesson.lessonId) + 1} / {course.lessons.length}
+            {course.lessons.findIndex((l) => l.lessonId === currentLesson.lessonId) + 1} /{' '}
+            {course.lessons.length}
           </span>
         </div>
 
-        {/* Dientes */}
         <div className={styles['teeth-illustrations']}>
           <div className={`${styles.tooth} ${styles['tooth-1']}`} />
           <div className={`${styles.tooth} ${styles['tooth-2']}`} />
