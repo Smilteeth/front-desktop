@@ -22,17 +22,12 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   onReschedule,
   onCancel
 }) => {
-  // Función para mostrar el tiempo restante basado en las nuevas reglas
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const renderTimeRemaining = () => {
-    // Si la cita ya pasó, no mostrar el tiempo restante
+  const renderTimeRemaining = (): string | null => {
     if (minutesUntil < 0) {
       return null
     }
 
-    // Si la cita es hoy (menos de 24 horas = 1440 minutos)
     if (minutesUntil < 1440) {
-      // Convertir minutos a horas y redondear
       const hoursUntil = Math.ceil(minutesUntil / 60)
 
       if (minutesUntil === 0) {
@@ -43,7 +38,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         return `en ${hoursUntil} horas`
       }
     } else {
-      // Convertir minutos a días y redondear
       const daysUntil = Math.ceil(minutesUntil / 1440)
 
       if (daysUntil === 1) {
@@ -54,7 +48,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     }
   }
 
-  // Obtener el elemento de tiempo restante (o null si no hay que mostrarlo)
   const timeRemainingElement = renderTimeRemaining()
 
   return (
@@ -65,12 +58,18 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       </div>
       <div className={styles.appointmentDetails}>
         <div className={styles.appointmentActions}>
-          <button className={styles.rescheduleButton} onClick={() => onReschedule(id)}>
-            Reagendar cita
-          </button>
-          <button className={styles.cancelButton} onClick={() => onCancel(id)}>
-            Cancelar cita
-          </button>
+          {timeRemainingElement == null ? (
+            <div className={styles.pastAppointment}>Cita pasada</div>
+          ) : (
+            <div className={styles.actionButtons}>
+              <button className={styles.rescheduleButton} onClick={() => onReschedule(id)}>
+                Reagendar cita
+              </button>
+              <button className={styles.cancelButton} onClick={() => onCancel(id)}>
+                Cancelar cita
+              </button>
+            </div>
+          )}
         </div>
         <h3 className={styles.patientName}>{patientName}</h3>
         <p className={styles.appointmentDescription}>{description}</p>

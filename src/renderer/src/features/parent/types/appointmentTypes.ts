@@ -10,6 +10,7 @@ export interface AppointmentResponse {
   dentistId: number | null
   fatherId: number | null
   childId: number | null
+  child?: string | null
   reason: string
   appointmentDatetime: string
   creationDate: string

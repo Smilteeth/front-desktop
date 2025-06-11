@@ -39,13 +39,18 @@ const DentistDashboard: React.FC = () => {
     return appointmentDate.toDateString() === today.toDateString() && appointment.isActive === true
   })
 
-  const recentAppointments = appointmentsData.filter((appointment) => {
-    const appointmentDate = new Date(appointment.appointmentDatetime)
-    const today = new Date()
-    return (
-      appointmentDate < today && appointmentDate >= new Date(today.setDate(today.getDate() - 7))
+  const recentAppointments = appointmentsData
+    .filter((appointment) => {
+      const appointmentDate = new Date(appointment.appointmentDatetime)
+      const today = new Date()
+      return (
+        appointmentDate < today && appointmentDate >= new Date(today.setDate(today.getDate() - 7))
+      )
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.appointmentDatetime).getTime() - new Date(a.appointmentDatetime).getTime()
     )
-  })
 
   return (
     <div className={styles.pageWrapper}>

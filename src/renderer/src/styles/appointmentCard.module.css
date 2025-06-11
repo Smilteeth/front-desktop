@@ -75,7 +75,8 @@
   justify-content: center;
 }
 
-.rescheduleButton, .cancelButton {
+.rescheduleButton,
+.cancelButton {
   padding: 8px 12px;
   border-radius: 5px;
   border: none;
@@ -107,4 +108,15 @@
 
 .cancelButton:hover {
   background-color: var(--background-normal-hover);
+}
+
+.actionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  height: calc(100% - 24px);
+  justify-content: center;
 }
