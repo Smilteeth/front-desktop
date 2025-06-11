@@ -4,7 +4,7 @@ import { ChildResponse } from '../types/childTypes'
 import styles from '../styles/childCard.module.css'
 
 interface ChildCardProps {
-  child: ChildResponse
+  child: ChildResponse & { nextAppointment?: string | null }
   isSelected: boolean
   onClick: () => void
   formatAge: (birthDate: string) => string
@@ -25,7 +25,6 @@ const ChildCard: React.FC<ChildCardProps> = ({
 
     const date = new Date(dateStr)
 
-    // Verificar si la fecha es válida
     if (isNaN(date.getTime())) {
       return 'Sin cita programada'
     }
