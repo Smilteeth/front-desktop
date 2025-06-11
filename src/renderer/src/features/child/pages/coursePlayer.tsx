@@ -112,7 +112,7 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
     }
   }
 
-  // Actualiza la barra de progreso durante la reproducción
+// Función modificada para manejar el final del video
   const updateProgressBar = useCallback(() => {
     const video = videoRef.current
     if (!video) return
@@ -123,40 +123,61 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
     setProgress(percent)
     setCurrentTime(ct)
 
-    if (ct >= dur - 0.5) {
-      // Aviso de finalización y navegación a la siguiente lección
-      setTimeout(() => {
-        alert('¡Muy bien! ¡Has completado esta lección! 🎉')
-        navigateToNextLesson()
-      }, 300)
-    }
-  }, [])
+    if (ct >= dur - 0.1) {
+      // Mostrar confirmación antes de redirigir al cuestionario
+      const userConfirmed = window.confirm(
+        '¡Felicidades! Has completado la lección.\n\nAhora debes responder el cuestionario para continuar.\n\n¿Listo para comenzar?'
+      )
 
-  // Navegar a la siguiente lección
+      if (userConfirmed) {
+        // Redirigir al cuestionario de la lección actual
+        navigate(`/courses/course/${courseId}/lesson/${lessonId}/quiz`)
+      } else {
+        // Si el usuario cancela, reiniciar el video al inicio
+        video.currentTime = 0
+        setIsPlaying(false)
+      }
+    }
+  }, [courseId, lessonId, navigate])
+
+  // Función modificada para navegar a la siguiente lección
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const navigateToNextLesson = (): void => {
     if (!course || !currentLesson) return
 
     const currentIndex = course.lessons.findIndex(l => l.lessonId === currentLesson.lessonId)
     if (currentIndex < course.lessons.length - 1) {
       const nextLesson = course.lessons[currentIndex + 1]
-      navigate(`/courses/course/${courseId}/lesson/${nextLesson.lessonId}`)
+      // Mostrar confirmación antes de redirigir
+      const userConfirmed = window.confirm(
+        '¡Lección completada!\n\n¿Deseas continuar con la siguiente lección?'
+      )
+
+      if (userConfirmed) {
+        navigate(`/courses/course/${courseId}/lesson/${nextLesson.lessonId}`)
+      }
     } else {
-      // Última lección completada, volver al detalle del curso
-      alert('¡Felicidades! ¡Has completado todo el curso! 🎊')
-      navigate(`/courses/course/${courseId}`)
+      // Mostrar confirmación para el final del curso
+      const userConfirmed = window.confirm(
+        '¡Felicidades! Has completado todo el curso.\n\n¿Deseas volver al inicio del curso?'
+      )
+
+      if (userConfirmed) {
+        navigate(`/courses/course/${courseId}`)
+      }
     }
   }
 
   // Maneja el clic en la barra de progreso para saltar a diferentes partes del video
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>): void => {
-    if (videoRef.current && progressBarRef.current) {
-      const rect = progressBarRef.current.getBoundingClientRect()
-      const clickPosition = e.clientX - rect.left
-      const barWidth = rect.width
-      const seekPercent = clickPosition / barWidth
-      videoRef.current.currentTime = seekPercent * videoRef.current.duration
-    }
-  }
+  // const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+  //   if (videoRef.current && progressBarRef.current) {
+  //     const rect = progressBarRef.current.getBoundingClientRect()
+  //     const clickPosition = e.clientX - rect.left
+  //     const barWidth = rect.width
+  //     const seekPercent = clickPosition / barWidth
+  //     videoRef.current.currentTime = seekPercent * videoRef.current.duration
+  //   }
+  // }
 
   // Formatea el tiempo en formato MM:SS
   const formatTime = (timeInSeconds: number): string => {
@@ -304,7 +325,7 @@ const CoursePlayer: React.FC<VideoPlayerScreenProps> = () => {
         <div
           className={styles['progress-bar']}
           ref={progressBarRef}
-          onClick={handleProgressBarClick}
+          // onClick={handleProgressBarClick}
         >
           <div className={styles['progress-filled']} style={{ width: `${progress}%` }} />
         </div>

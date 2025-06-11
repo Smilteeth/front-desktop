@@ -21,6 +21,7 @@ import CourseDetail from '@renderer/features/child/pages/courseDetail'
 import Courses from '@renderer/features/child/pages/courses'
 import CoursePlayer from '@renderer/features/child/pages/coursePlayer'
 import Dientin from '@renderer/features/child/pages/dientinHome'
+import LessonQuiz from '@renderer/features/child/pages/quiz'
 
 function AuthRoutes(): React.JSX.Element {
   return (
@@ -165,6 +166,14 @@ function AuthRoutes(): React.JSX.Element {
         element={
           <ProtectedRoute>
             <Dientin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses/course/:courseId/lesson/:lessonId/quiz"
+        element={
+          <ProtectedRoute>
+            <LessonQuiz/>
           </ProtectedRoute>
         }
       />

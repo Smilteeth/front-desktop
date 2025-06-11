@@ -30,6 +30,15 @@ export interface CoursesApiResponse {
   items: Course[]
 }
 
+// interfaz para las preguntas
+interface Question {
+  questionId: number
+  questionText: string
+  options: string[]
+  correctAnswer: string
+}
+
+
 // Configuración base de la API
 const API_BASE_URL = 'https://smiltheet-api.rafabeltrans17.workers.dev/api' // Ajusta según tu configuración
 
@@ -149,5 +158,13 @@ export const errorHandler = {
   // Log de errores para debugging
   logError: (context: string, error: unknown): void => {
     console.error(`Error in ${context}:`, error)
+  }
+}
+
+// Servicio para manejar preguntas del cuestionario
+export const quizService = {
+  getQuestionsForLesson: async (lessonId: number): Promise<Question[]> => {
+    const response = await apiRequest<{ questions: Question[] }>(`/lesson/${lessonId}/questions`)
+    return response.questions
   }
 }

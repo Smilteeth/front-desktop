@@ -1,0 +1,151 @@
+/* quiz.module.css */
+
+.quiz-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.quiz-container h1 {
+  color: #5d5d5d;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.question {
+  background-color: #f8f4ff; /* Color pastel lavanda */
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.indication {
+  color: #6a5acd; /* Color acento */
+  font-weight: 500;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.question p {
+  margin: 1rem 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 2rem; /* Añadido margen inferior para separar del botón */
+}
+
+.options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.8rem 1rem;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+  border: 1px solid #e0e0e0;
+}
+
+.options label:hover {
+  background-color: #f0ebff;
+  border-color: #d0c4ff;
+}
+
+.options input[type="radio"] {
+  margin-top: 0.2rem;
+  accent-color: #6a5acd;
+}
+
+.submit-button {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #6a5acd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem; /* Añadido margen superior adicional */
+}
+
+.submit-button:hover {
+  background-color: #5a4acd;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Estilos para la pantalla de resultados */
+.quiz-container h1:first-child {
+  margin-bottom: 1.5rem;
+}
+
+/* Estilos responsive */
+@media (max-width: 768px) {
+  .quiz-container {
+    padding: 1rem;
+  }
+
+  .question {
+    padding: 1rem;
+  }
+
+  .options {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Añade esto a tu quiz.module.css */
+
+.result {
+  background-color: #f0f8ff; /* Fondo pastel azul */
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.score {
+  font-size: 1.2rem;
+  color: #5d5d5d;
+  margin-bottom: 1rem;
+}
+
+.coins {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ffa500; /* Color naranja para destacar las monedas */
+}
+
+.exit-button {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #6a5acd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+}
+
+.exit-button:hover {
+  background-color: #5a4acd;
+}
